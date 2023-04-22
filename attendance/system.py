@@ -2,6 +2,7 @@ from openpyxl import Workbook, load_workbook
 import xlwings as xw 
 from .models import Account
 from django.utils import timezone
+from mysite2.settings import BASE_DIR
 import os
 
 wageTime_dir = 'excel_sheets/wageTime_sheets 2023'
@@ -12,7 +13,7 @@ def WriteAttendance(account):
 
     now = timezone.localtime(timezone.now())
     username = account.user.username
-    sheet_path = wageTime_dir+'/time sheet '+str(now.month)+'.xlsx'
+    sheet_path = BASE_DIR/wageTime_dir/"'time sheet '+str(now.month)+'.xlsx'"
     wb = load_workbook(sheet_path)
     ws = wb[username]
 
@@ -27,7 +28,7 @@ def WriteAttendance(account):
 
 def test():
     now = timezone.localtime(timezone.now())
-    sheet_path = wageTime_dir+'/time sheet 4.xlsx'
+    sheet_path = BASE_DIR/wageTime_dir/'/time sheet 4.xlsx'
     wb = load_workbook(sheet_path)
     ws = wb["ss"]
 
@@ -46,8 +47,8 @@ def test():
 def AddSheet(user): 
     xw.App(visible=False)
 
-    temp_sheet = xw.Book(wageTime_dir+'/template.xlsx')
-    sheet_path = wageTime_dir+'/time sheet '+str(timezone.now().month)+'.xlsx'
+    temp_sheet = xw.Book(BASE_DIR/wageTime_dir/'/template.xlsx')
+    sheet_path = BASE_DIR/wageTime_dir/"'/time sheet '+str(timezone.now().month)+'.xlsx'"
     wb = xw.Book(sheet_path)
 
     try:  
