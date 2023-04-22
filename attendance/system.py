@@ -13,7 +13,8 @@ def WriteAttendance(account):
 
     now = timezone.localtime(timezone.now())
     username = account.user.username
-    sheet_path = BASE_DIR/wageTime_dir/"'time sheet '+str(now.month)+'.xlsx'"
+    excel_name = 'time sheet '+str(now.month)+'.xlsx'
+    sheet_path = BASE_DIR/wageTime_dir/excel_name
     wb = load_workbook(sheet_path)
     ws = wb[username]
 
