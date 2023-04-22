@@ -20,9 +20,10 @@ def WriteAttendance(account):
 
     t_start = timezone.localtime(account.start_time)
     t_end = timezone.localtime(account.end_time)
+    print(t_start)
 
-    ws.cell(row=account.start_time.day+2, column=5, value=t_end.strftime("%H:%M"))
-    ws.cell(row=account.start_time.day+2, column=4, value=t_start.strftime("%H:%M"))
+    ws.cell(row=t_start.day+2, column=5, value=t_end.strftime("%H:%M"))
+    ws.cell(row=t_start.day+2, column=4, value=t_start.strftime("%H:%M"))
 
     wb.save(sheet_path)
     wb.close()
@@ -47,9 +48,10 @@ def test():
 
 def AddSheet(user): 
     xw.App(visible=False)
-
-    temp_sheet = xw.Book(BASE_DIR/wageTime_dir/'/template.xlsx')
-    sheet_path = BASE_DIR/wageTime_dir/"'/time sheet '+str(timezone.now().month)+'.xlsx'"
+    template_name = 'template.xlsx'
+    excel_name = 'time sheet '+str(timezone.now().month)+'.xlsx'
+    temp_sheet = xw.Book(BASE_DIR/wageTime_dir/template_name)
+    sheet_path = BASE_DIR/wageTime_dir/excel_name
     wb = xw.Book(sheet_path)
 
     try:  

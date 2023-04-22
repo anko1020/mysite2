@@ -145,7 +145,7 @@ def PDF(request,user):
     wb.save(dir+'pdf_temp.pdf',SaveFormat.PDF)'''
             
     #response = HttpResponse(open(path_excel, 'rb').read(), content_type='application/vnd.ms-excel')
-    pdf_name = "Time Sheet:"+"s"+".xlsx"
+    pdf_name = "Time Sheet:"+user+".xlsx"
     response = HttpResponse(open(path_excel, 'rb').read(), content_type=mimetypes.guess_type(pdf_name)[0])
     
     response['Content-Disposition'] = f'attachment; filename={pdf_name}'
