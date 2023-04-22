@@ -11,7 +11,7 @@ from openpyxl import Workbook, load_workbook
 from reportlab.pdfgen import canvas
 
 from pathlib import Path
-import pythoncom
+#import pythoncom
 from . import system
 import os
 from .forms import AccountForm
