@@ -1,0 +1,24 @@
+{% extends "attendance/base.html" %}
+{% block content %}
+
+<p align="center">{%now "Y年n月d日(D)"%}</p>
+<p align="center"><font size="30">{%now "H:i"%}</font></p>
+<form method="Post" action="{% url 'Login' %}">
+  <div class="container">
+    <h1>ログイン</h1>
+    {% csrf_token %}
+    {% if incorrect %}
+       <font color="red" size="2"><p>UsernameもしくはPasswordが間違っています．</p></font>
+    {% endif %}
+    <label for="username"><b>ユーザネーム</b></label>
+
+    <input type="text" placeholder="Enter Username" name="username" required>
+    <label for="password"><b>パスワード</b></label>
+    <input type="password" placeholder="Enter Password" name="password" required>
+    
+    
+    <button type="submit">出勤/退勤</button>
+   </div>
+ </form>
+
+ {% endblock %}

@@ -1,0 +1,45 @@
+{% extends "attendance/DB5_base.html" %}
+
+{% block title %}
+管理者form
+{% endblock title %}
+{% block body %}
+<header><h1>管理者form</h1></header>
+<br>
+<div class="container">
+    <table class="table caption-top">
+        <caption>List of users</caption>
+        <thead>
+          <tr>
+            <th scope="col">名前</th>
+            <th scope="col">状態</th>
+            <th scope="col">時間</th>
+            <th scope="col">出退勤記録</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for account in object_list %}
+            <tr>
+            {% if not account.user.username == "admin" %}
+            <th scope="row">{{account.user}}</th>
+                {% if account.is_working %}
+                    <td>出勤</td>
+                    <td>{{ account.start_time|date:"n月d日(D)H時i分" }}出勤</td>
+                {% else %}
+                    <td>退勤</td>
+                    <td>{{ account.end_time|date:"n月d日(D)H時i分" }}退勤</td>
+                {% endif %}
+                <td>
+                    <a href="{% url 'PopPDF' user=account.user.username %}" target="_blank" rel="noreferrer noopener">pdf</a>
+                    
+                </td>
+            {% endif %}
+            </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <a href="{% url 'Register' %}">新規登録はこちら</a><br>
+      <a href="{% url 'Login' %}">ログインはこちら</a><br>
+ </div>
+
+{% endblock body %}

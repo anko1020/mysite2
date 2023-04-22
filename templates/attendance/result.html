@@ -1,0 +1,21 @@
+{% extends "attendance/base.html" %}
+{% block content %}
+
+<div class="attendance">
+    <form>
+    <h1>{{ user }}さん </h1>
+    {% if is_working %}
+    <p>
+        開始時間は{{time}}です．<br>
+        今日も一日頑張りましょう．
+    </p>
+    {% else %}
+    <p>
+        勤務時間は{{delta}}です．<br>
+        お疲れさまでした．
+    </p>
+    {% endif %}
+
+    </form>
+</div>
+{% endblock %}

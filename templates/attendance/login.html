@@ -1,0 +1,24 @@
+{% extends "attendance/base.html" %}
+{% block content %}
+
+<h1>Login</h1>
+
+
+<div class="reg">
+    <form method="Post" action="{% url 'Login' %}">
+        {% csrf_token %}
+        {% if incorrect %}
+            <font color="red">ID，もしくはパスワードが間違っています.</font>
+        {% endif %}
+        <table class="reg_form">
+        <tr>
+        <td><lable for="userid">userID:</lable></td>
+        <td><input type="text" name="userid"></td>
+        <td><label for="password">password:</label></td>
+        <td><input type="password" name="password"></td>
+        </tr>
+        </table>
+        <input type="submit" class="btn" value="Login">
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "attendance/base.html" %}
+{% block content %}
+
+{% csrf_token %}
+<h1>退勤管理Form</h1>
+
+<div>
+    <form>
+    {% if is_working %}
+        <p>出勤時間は{{time}}です．<br>今日も一日頑張りましょう．</p>
+    {% else %}
+        <p>{{user}}さんの作業時間は{{delta_h}}時間{{delta_m}}分です．<br>お疲れ様でした．</p>
+        
+    {% endif %}
+    </form>
+    <p align="center">ログイン中：{{user}}さん</p>
+</div>
+
+
+{% endblock %}
