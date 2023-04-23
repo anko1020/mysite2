@@ -1,5 +1,4 @@
 from openpyxl import Workbook, load_workbook
-import xlwings as xw 
 from .models import Account
 from django.utils import timezone
 from mysite2.settings import BASE_DIR
@@ -48,21 +47,16 @@ def test():
 
 def AddSheet(user): 
     #xw.App(visible=False)
-    template_name = 'template.xlsx'
     excel_name = 'time sheet '+str(timezone.now().month)+'.xlsx'
-    temp_sheet = xw.Book(BASE_DIR/wageTime_dir/template_name)
     sheet_path = BASE_DIR/wageTime_dir/excel_name
-    wb = xw.Book(sheet_path)
+    wb = load_workbook(sheet_path)
 
-    try:  
-        temp_sheet.sheets['ひな形'].copy(after=wb.sheets[-1])
-        ws = wb.sheets[-1]
-        ws.name = user
-        ws.range("E1").value = user
+    try:
+        ws = wb.copy_worksheet(wb["ひな形"])
+        ws.freeze_panes = 'A3'
+        ws.title = user
+        ws["E1"] = user
 
         wb.save(sheet_path)
     except:
         print('Write excel error')
-
-    temp_sheet.close()
-    wb.close()
