@@ -47,7 +47,7 @@ def test():
 
 
 def AddSheet(user): 
-    xw.App(visible=False)
+    #xw.App(visible=False)
     template_name = 'template.xlsx'
     excel_name = 'time sheet '+str(timezone.now().month)+'.xlsx'
     temp_sheet = xw.Book(BASE_DIR/wageTime_dir/template_name)
