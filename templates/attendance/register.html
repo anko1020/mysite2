@@ -4,7 +4,8 @@
 
  {% if AccountCreate %}
    <h1>登録完了!</h1>
-   <a href="{% url 'Login' %}">ログインはこちら</a>
+   <a href="{% url 'Login' %}">ログインはこちら</a><br>
+   <a href="{% url 'AdminForm' %}">管理者formへ戻る</a>
 
 
  {% else %}

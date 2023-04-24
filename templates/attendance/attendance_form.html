@@ -5,6 +5,7 @@
 <h1>退勤管理Form</h1>
 
 <div>
+    <p align="center">ログイン中：{{user}}さん</p>
     <form>
     {% if is_working %}
         <p>出勤時間は{{time}}です．<br>今日も一日頑張りましょう．</p>
@@ -12,8 +13,9 @@
         <p>{{user}}さんの作業時間は{{delta_h}}時間{{delta_m}}分です．<br>お疲れ様でした．</p>
         
     {% endif %}
+    <button class = "bbutton" onclick="location.href='{% url 'Login' %}'">確認</button>
+ 
     </form>
-    <p align="center">ログイン中：{{user}}さん</p>
 </div>
 
 

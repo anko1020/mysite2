@@ -9,5 +9,6 @@ urlpatterns = [
     path("adminform", views.AdminFrom.as_view(), name="AdminForm"),
     path("register", views.Registration.as_view(), name="Register"),
     path("pdf/<slug:user>", views.PDF ,name="PopPDF"),
+    path("daily", views.daily ,name="Daily"),
     path("control", views.control, name="Control"),
 ]

@@ -13,4 +13,3 @@ class Account(models.Model):
     end_time = models.DateTimeField(verbose_name="終了時間")
     def __str__(self):
         return self.user.username
-

@@ -151,6 +151,33 @@ def PDF(request,user):
     response['Content-Disposition'] = f'attachment; filename={pdf_name}'
     return response
 
+def daily(request):
+    
+    path =BASE_DIR/'excel_sheets/QB Daily Report.xlsx/'
+    #path_excel = str(Path(BASE_DIR+dir+'time sheet 4.xlsx').resolve())
+    #path_pdf = str(Path(BASE_DIR+dir+'pdf_temp.pdf').resolve())
+    
+    '''pythoncom.CoInitialize()
+    excel = win32com.client.Dispatch("Excel.Application")
+    _wb = excel.Workbooks.Open(path_excel)
+    ws = _wb.Worksheets(user)
+    ws.ExportAsFixedFormat(0,path_pdf)
+    _wb.Close()
+    excel.Quit()
+
+    pythoncom.CoUninitialize() '''
+    '''
+    wb = load_workbook(dir+'time sheet 4.xlsx')
+    ws = wb['s']
+    wb.save(dir+'pdf_temp.pdf',SaveFormat.PDF)'''
+            
+    #response = HttpResponse(open(path_excel, 'rb').read(), content_type='application/vnd.ms-excel')
+    pdf_name = "QB Daily Report.xlsx"
+    response = HttpResponse(open(path, 'rb').read(), content_type=mimetypes.guess_type(pdf_name)[0])
+    
+    response['Content-Disposition'] = f'attachment; filename={pdf_name}'
+    return response
+
 def control(request):
     now = timezone.now()
     system.test()
