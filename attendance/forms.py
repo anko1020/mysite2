@@ -15,3 +15,4 @@ class AccountForm(forms.ModelForm):
         
     password = forms.CharField(widget=forms.PasswordInput(),label="パスワード")
 
+

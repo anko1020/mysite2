@@ -6,34 +6,40 @@
 {% block body %}
 <header><h1>管理者form</h1></header>
 <br>
-<div class="container">
+<div class="container bg-light">
     <table class="table caption-top">
-        <caption>List of users</caption>
+        <caption>STAFF</caption>
         <thead>
           <tr>
             <th scope="col">名前</th>
             <th scope="col">状態</th>
-            <th scope="col">時間</th>
-            <th scope="col">出退勤記録</th>
+            <th scope="col">出勤時間</th>
+            <th scope="col">退勤時間</th>
+            <th scope="col">送り</th>
           </tr>
         </thead>
         <tbody>
+
         {% for account in object_list %}
-            <tr>
+            <tr><div class="row position-relative">
             {% if not account.user.username == "admin" %}
-            <th scope="row">{{account.user}}</th>
-                {% if account.is_working %}
-                    <td>出勤</td>
-                    <td>{{ account.start_time|date:"n月d日(D)H時i分" }}出勤</td>
-                {% else %}
-                    <td>退勤</td>
-                    <td>{{ account.end_time|date:"n月d日(D)H時i分" }}退勤</td>
-                {% endif %}
+                <th scope="row">
+                <a href="{% url 'Edit' pk=account.pk %}">{{account.user}}
+                </a>
+                </th>
+                {% if account.is_working %}<td>出勤</td>
+                {% else %}<td>退勤</td>{% endif %}
+                <td>{{account.start_overtime}}</td>
+                <td>{{account.end_overtime}}</td>
+                <td>
+                    {% if account.is_sending %}&#10004;{% endif %}
+                </td>
                 <td>
                     <a href="{% url 'PopPDF' user=account.user.username %}" target="_blank" rel="noreferrer noopener">pdf</a>
-                    
-                </td>
+                </td> 
+               
             {% endif %}
+            </div>
             </tr>
         {% endfor %}
         </tbody>

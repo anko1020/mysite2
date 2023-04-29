@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404, render
-from django.views.generic import TemplateView, ListView
+from django.views.generic import TemplateView, ListView, FormView
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
@@ -54,14 +54,15 @@ def Logout(request):
 def Result(request):
     account = get_object_or_404(Account, user=request.user)
     account.is_working = not account.is_working
-    now = timezone.now()
+    now = timezone.localtime(timezone.now())
     if account.is_working:
         account.start_time = now
         working_time = now-now
+        system.WriteAttendance(account)
     else:
         account.end_time = now
         working_time =  now - account.start_time
-        system.WriteAttendance(account)
+        system.WriteLeaving(account)
     
     account.save()
     logout(request)
@@ -151,9 +152,40 @@ def PDF(request,user):
     response['Content-Disposition'] = f'attachment; filename={pdf_name}'
     return response
 
+def AccountEditer(request, pk):
+    if request.method == 'POST':
+        account = get_object_or_404(Account,pk=pk)
+        prev_name = account.user.username
+        user = User.objects.get(username=prev_name)
+        account.user.username = request.POST.get('username')
+        user.username = request.POST.get('username')
+        password = request.POST.get('password')
+        account.start_time = system.ConvertOvertimeToDatetime(request.POST.get('start_t'))
+        account.end_time = system.ConvertOvertimeToDatetime(request.POST.get('end_t'))
+        account.is_sending = request.POST.get('is_send') == "on"
+        
+        
+        if prev_name != account.user.username:
+            system.ChangeSheetName(prev_name, account.user.username)
+        system.WriteAttendance(account)
+        system.WriteLeaving(account)
+
+        user.save()
+        account.save()
+
+        print(request.POST.get('start_t'))
+        return HttpResponseRedirect(reverse("AdminForm"))
+        
+    else:
+        account = get_object_or_404(Account,pk=pk)
+        return render(request,"attendance/account_edit.html", {'ChangedUser':account})
+    
+
+
+
 def daily(request):
     
-    path =BASE_DIR/'excel_sheets/QB Daily Report.xlsx/'
+    path = BASE_DIR/'excel_sheets/QB Daily Report.xlsx/'
     #path_excel = str(Path(BASE_DIR+dir+'time sheet 4.xlsx').resolve())
     #path_pdf = str(Path(BASE_DIR+dir+'pdf_temp.pdf').resolve())
     
