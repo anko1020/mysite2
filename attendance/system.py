@@ -1,8 +1,10 @@
 from openpyxl import Workbook, load_workbook
 from .models import Account
 from django.utils import timezone
+import xlwings as xw
 from mysite2.settings import BASE_DIR
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+import calendar
 import os
 
 wageTime_dir = BASE_DIR/'excel_sheets/wageTime_sheets 2023'
@@ -14,10 +16,25 @@ def WriteAttendance(account):
 
     now = timezone.localtime(timezone.now())
     username = account.user.username
-    excel_name = 'time sheet '+str(now.month)+'.xlsx'
+    excel_name = '出退勤表　'+str(now.month)+'月.xlsx'
     sheet_path = wageTime_dir/excel_name
+
     wb = load_workbook(sheet_path)
-    ws = wb[username]
+
+    maching_flg = False
+    for title in wb.sheetnames:
+        if title == username:
+            maching_flg = True
+            break
+
+    if maching_flg:
+        ws = wb[username]
+    else:
+        ws = wb.copy_worksheet(wb["ひな形"])
+        ws.freeze_panes = 'A3'
+        ws.title = username
+        ws["E1"] = username
+        wb.save(sheet_path)
 
     t_start = account.start_time
 
@@ -52,10 +69,15 @@ def WriteLeaving(account):
 
     now = timezone.localtime(timezone.now())
     username = account.user.username
-    excel_name = 'time sheet '+str(now.month)+'.xlsx'
+    excel_name = '出退勤表　'+str(now.month)+'月.xlsx'
     sheet_path = wageTime_dir/excel_name
     wb = load_workbook(sheet_path)
-    ws = wb[username]
+    try:
+        ws = wb[username]
+    except Exception as e:
+        print("error:")
+        print(e)
+        return
 
     user_number = 0
     for sheet in wb.sheetnames:
@@ -110,7 +132,7 @@ def WriteLeaving(account):
 
 def ChangeSheetName(prev_name, name):
     now = timezone.localtime(timezone.now())
-    excel_name = 'time sheet '+str(now.month)+'.xlsx'
+    excel_name = '出退勤表　'+str(now.month)+'月.xlsx'
     sheet_path = wageTime_dir/excel_name
     wb = load_workbook(sheet_path)
     ws = wb[prev_name]
@@ -119,27 +141,55 @@ def ChangeSheetName(prev_name, name):
     wb.close()
 
 
-def test():
+def test(month):
     now = timezone.localtime(timezone.now())
-    sheet_path = wageTime_dir/'/time sheet 4.xlsx'
-    wb = load_workbook(sheet_path)
-    ws = wb["ss"]
 
-    t_start = now.strftime("%H:%M")
-    print(t_start)
-    t_end = "15:10"
+    origin_excel = 'template.xlsx'
+    origin_path = wageTime_dir/origin_excel
+    origin_wb = xw.Book(origin_path)
 
-    ws.cell(row=20+2, column=5, value=t_end)
-    ws.cell(row=20+2, column=4, value=t_start)
+    excel_name = '出退勤表　'+str(month)+'月.xlsx'
+    sheet_path = wageTime_dir/excel_name
+    wb = xw.Book(sheet_path)
+    
+    origin_wb.sheets["ひな形"].copy(after=wb.sheets[0])
 
-    wb.save(sheet_path)
+    wb.sheets["Sheet1"].delete()
+
+    origin_wb.save()
+    weekDay = ["月","火","水","木","金","土","日"]
+    print(calendar.monthrange(2023, month)[1])
+    for i in range(calendar.monthrange(2023, month)[1]):
+        dates = str(month)+"月"+str(i+1)+"日"
+        weekd = weekDay[(date(2023, month, i+1).weekday())]
+        wb.sheets["ひな形"].range(3+i,2).value = dates
+        wb.sheets["ひな形"].range(3+i,3).value = weekd
+        print(dates+weekd)
+
+    app = xw.apps.active
+
+    wb.save()
+    origin_wb.close()
     wb.close()
 
+    app.kill()
+
+def makenew(month):
+
+    excel_name = '出退勤表　'+str(month)+'月.xlsx'
+    sheet_path = wageTime_dir/excel_name
+    wb = xw.Book()
+
+    wb.save(sheet_path)
+    app = xw.apps.active
+    wb.close()
+
+    app.kill()
 
 
 def AddSheet(user):
     #xw.App(visible=False)
-    excel_name = 'time sheet '+str(timezone.now().month)+'.xlsx'
+    excel_name = '出退勤表　'+str(timezone.now().month)+'月.xlsx'
     sheet_path = wageTime_dir/excel_name
     wb = load_workbook(sheet_path)
     

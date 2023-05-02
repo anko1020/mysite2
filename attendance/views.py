@@ -212,6 +212,8 @@ def daily(request):
 
 def control(request):
     now = timezone.now()
-    system.test()
+    for i in range(5,13):
+        system.makenew(i)
+        #system.test(i)
     #system.AddSheet("ttt")
     return render(request,"attendance/outxlsx.html")
