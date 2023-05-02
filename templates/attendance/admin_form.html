@@ -35,7 +35,7 @@
                     {% if account.is_sending %}&#10004;{% endif %}
                 </td>
                 <td>
-                    <a href="{% url 'PopPDF' user=account.user.username %}" target="_blank" rel="noreferrer noopener">pdf</a>
+                    <a href="{% url 'PopExcel' user=account.user.username %}" target="_blank" rel="noreferrer noopener">excel</a>
                 </td> 
                
             {% endif %}

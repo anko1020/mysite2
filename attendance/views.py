@@ -8,7 +8,8 @@ from django.contrib.auth.models import User
 #from django.contrib.auth.mixins import UserPassesTestMixin
 from django.utils import timezone
 from openpyxl import Workbook, load_workbook
-from reportlab.pdfgen import canvas
+from openpyxl.styles import Alignment
+from openpyxl.styles.borders import Border, Side
 
 import mimetypes
 from mysite2.settings import BASE_DIR
@@ -124,30 +125,47 @@ class Registration(TemplateView):
 
             return render(request,"attendance/register.html" ,context=self.params)
         
-def PDF(request,user):
-    
-    path ='excel_sheets/wageTime_sheets 2023/'
-    #path_excel = str(Path(BASE_DIR+dir+'time sheet 4.xlsx').resolve())
-    #path_pdf = str(Path(BASE_DIR+dir+'pdf_temp.pdf').resolve())
-    path_excel = BASE_DIR/path/'time sheet 4.xlsx'
-    path_pdf = BASE_DIR/path/'pdf_temp.pdf'
-    '''pythoncom.CoInitialize()
-    excel = win32com.client.Dispatch("Excel.Application")
-    _wb = excel.Workbooks.Open(path_excel)
-    ws = _wb.Worksheets(user)
-    ws.ExportAsFixedFormat(0,path_pdf)
-    _wb.Close()
-    excel.Quit()
+def DownloadExcel(request,user):
+    now = timezone.localtime(timezone.now())
 
-    pythoncom.CoUninitialize() '''
-    '''
-    wb = load_workbook(dir+'time sheet 4.xlsx')
-    ws = wb['s']
-    wb.save(dir+'pdf_temp.pdf',SaveFormat.PDF)'''
+    path ='excel_sheets/wageTime_sheets 2023/'
+    excel_name = '出退勤表　'+str(now.month)+'月.xlsx'
+    excel_path = BASE_DIR/path/excel_name
+    temp_path = BASE_DIR/path/"download_temp.xlsx"
+
+    wb = load_workbook(excel_path)
+    ws = wb[user]
+
+    temp_book = load_workbook(temp_path)
+    temp_sheet = temp_book.worksheets[0]
+    temp_sheet.title = user
+    temp_sheet.freeze_panes = 'D3'
+    
+    for column in ws.columns:
+        temp_sheet.column_dimensions[column[0].column_letter].width = ws.column_dimensions[column[0].column_letter].width
+        for cell in column:
+            print(cell.column)
+            print(cell.number_format)
+            temp_cell = temp_sheet.cell(row=cell.row, column=cell.column)
+            #temp_sheet[cell.coordinate].border = ws[cell.coordinate].border
+            temp_cell.value = cell.value
+            _top = Side(style=cell.border.top.style)
+            _bottom = Side(style=cell.border.bottom.style)
+            _right = Side(style=cell.border.right.style)
+            _left = Side(style=cell.border.left.style)
+            temp_cell.border = Border(top=_top, bottom=_bottom, right=_right, left=_left)
+            temp_cell.alignment = Alignment(horizontal=ws[cell.coordinate].alignment.horizontal)
             
+            if temp_cell.column == 2:
+                temp_cell.number_format = 'm"月"d"日"'
+            else:
+                temp_cell.number_format = cell.number_format 
+    
+    temp_book.save(temp_path)
+
     #response = HttpResponse(open(path_excel, 'rb').read(), content_type='application/vnd.ms-excel')
     pdf_name = "Time Sheet:"+user+".xlsx"
-    response = HttpResponse(open(path_excel, 'rb').read(), content_type=mimetypes.guess_type(pdf_name)[0])
+    response = HttpResponse(open(temp_path, 'rb').read(), content_type=mimetypes.guess_type(pdf_name)[0])
     
     response['Content-Disposition'] = f'attachment; filename={pdf_name}'
     return response
@@ -212,8 +230,5 @@ def daily(request):
 
 def control(request):
     now = timezone.now()
-    for i in range(5,13):
-        system.makenew(i)
-        #system.test(i)
-    #system.AddSheet("ttt")
+    system.ExcelToPDF()
     return render(request,"attendance/outxlsx.html")

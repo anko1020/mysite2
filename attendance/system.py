@@ -5,6 +5,8 @@ import xlwings as xw
 from mysite2.settings import BASE_DIR
 from datetime import datetime, timedelta, date
 import calendar
+from fpdf import FPDF
+import pdfkit as pdf
 import os
 
 wageTime_dir = BASE_DIR/'excel_sheets/wageTime_sheets 2023'
@@ -201,7 +203,7 @@ def AddSheet(user):
     print(count)
     try:
         ws = wb.copy_worksheet(wb["ひな形"])
-        ws.freeze_panes = 'A3'
+        ws.freeze_panes = 'D3'
         ws.title = user
         ws["E1"] = user
         wb.save(sheet_path)
@@ -229,3 +231,27 @@ def ConvertOvertimeToDatetime(overdatetime):
     print("converted:")
     print(convertedDateTime)
     return convertedDateTime
+
+def ExcelToPDF():
+    excel_name = '出退勤表　'+str(timezone.now().month)+'月.xlsx'
+    sheet_path = wageTime_dir/excel_name
+    
+    workbook = load_workbook(sheet_path)
+    worksheet = workbook["tt"]
+
+    # PDFファイルを作成
+    pdf = FPDF()
+    pdf.add_page()
+
+    pdf.add_font('IPAGothic', '', '/path/to/IPAGothic.ttf', uni=True)
+    pdf.set_font('IPAGothic', '', 14)
+
+
+    # Excelファイルの各セルから値を取得してPDFに書き込む
+    for row in worksheet.iter_rows():
+        for cell in row:
+            pdf.cell(40, 10, str(cell.value))
+
+    # PDFファイルを保存
+    pdf.output("example.pdf")
+    #pdf.from_file('test.html', 'pdf1.pdf')
