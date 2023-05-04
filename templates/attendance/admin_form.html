@@ -6,14 +6,17 @@
 {% block body %}
 <header><h1>管理者form</h1></header>
 <br>
-<div class="container bg-light">
+<div class="container bg-light"><form action="{% url 'AdminForm' %}" method="post">
+  {% csrf_token %}
+  <input type="submit" class=btn btn-primary value="削除">
+
     <table class="table caption-top">
-        <caption>STAFF</caption>
+        <caption></caption>
         <thead>
           <tr>
-            <th scope="col"><div class="form-check">
-  <input class="form-check-input" type="checkbox" value="" id="formCheckDefault">
-  </div><input class="form-check-input"></th>
+            <th>
+              <label><input class="form-check-input" type="checkbox" id="all"></label>
+            </th>
             <th scope="col">名前</th>
             <th scope="col">状態</th>
             <th scope="col">出勤時間</th>
@@ -24,9 +27,12 @@
         <tbody>
 
         {% for account in object_list %}
-            <tr><div class="row position-relative">
+            <tr><div>
             {% if not account.user.username == "admin" %}
-                <th scope="row">yes</th>
+                <th scope="row">
+                  <label><input class="form-check-input" type="checkbox" name="chk" value="{{account.pk}}"></label>
+                  </th>
+               
                 <th scope="row">
                 <a href="{% url 'Edit' pk=account.pk %}">{{account.user}}
                 </a>
@@ -51,6 +57,6 @@
       <a href="{% url 'Register' %}">新規登録はこちら</a><br>
       <a href="{% url 'Login' %}">ログインはこちら</a><br><br>
       <a href="{% url 'Daily' %}">日報をダウンロード</a>
- </div>
+ </form></div>
 
 {% endblock body %}

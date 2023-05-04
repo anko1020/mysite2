@@ -21,6 +21,8 @@
     {% block title %}
     {% endblock %}
     </title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/X.X.X/jquery.min.js"></script>
+    
 </head>
   <body>
     <!-- Start your project here-->
@@ -31,6 +33,38 @@
     <!-- MDB -->
     <script type="text/javascript" src="{% static 'attendance/MDB5/js/mdb.min.js' %}"></script>
     <!-- Custom scripts -->
-    <script type="text/javascript"></script>
-  </body>
+    <script type="text/javascript">
+    function AllChecked(checked){/*
+    var checkbox = document.getElementByName('chks');
+    //var checkbox = document.account_select;
+    if (checkbox.length != -1){
+      alert(checkbox.length);
+    }
+    alert(checkbox.length);
+      for (var i=0; i<checkbox.length; i++){
+        checkbox[i].checked = true;
+      } 
+    }*/
+    </script>
+    <script>
+    $(function() {
+    // 「全選択」する
+    $('#all').on('click', function() {
+      alert("a");
+      $("input[name='chks']").prop('checked', this.checked);
+    });
+/*
+  // 「全選択」以外のチェックボックスがクリックされたら、
+    $("input[name='chks']").on('click', function() {
+      if ($('#boxes :checked').length == $('#boxes :input').length) {
+        // 全てのチェックボックスにチェックが入っていたら、「全選択」 = checked
+        $('#select_all').prop('checked', true);
+      } else {
+        // 1つでもチェックが入っていたら、「全選択」 = checked
+        $('#select_all').prop('checked', false);
+      }
+    });*/
+});
+    </script>
+    </body>
 </html>

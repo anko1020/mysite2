@@ -131,6 +131,8 @@ def WriteLeaving(account):
         
         wb_daily = load_workbook(dailyReport_sheet)
         ws_daily = wb_daily["Revised"]
+        
+        maching_flg = False
         for title in wb.sheetnames:
             if title == username:
                 maching_flg = True
@@ -159,7 +161,6 @@ def ChangeSheetName(prev_name, name):
     ws.title = name
     wb.save(sheet_path)
     wb.close()
-
 
 def test(month):
     now = timezone.localtime(timezone.now())
@@ -216,7 +217,7 @@ def TodayBehind12():
 
 def AddSheet(user):
     #xw.App(visible=False)
-    excel_name = '出退勤表　'+str(timezone.now().month)+'月.xlsx'
+    excel_name = '出退勤表　'+str(TodayBehind12().month)+'月.xlsx'
     sheet_path = wageTime_dir/excel_name
     wb = load_workbook(sheet_path)
     
@@ -237,6 +238,21 @@ def AddSheet(user):
         wb_daily.save(dailyReport_sheet)
     except:
         print('Write excel error')
+    
+def DeleteSheet(user):
+    excel_name = '出退勤表　'+str(TodayBehind12().month)+'月.xlsx'
+    sheet_path = wageTime_dir/excel_name
+    wb = load_workbook(sheet_path)
+
+    maching_flg = False
+    for title in wb.sheetnames:
+        if title == user:
+            maching_flg = True
+            break
+
+    if maching_flg:
+        wb.remove(wb[user])
+        wb.save(sheet_path)
         
 def ConvertOvertimeToDatetime(overdatetime):
     now = timezone.localtime(timezone.now())

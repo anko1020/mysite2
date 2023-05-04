@@ -81,9 +81,19 @@ def Result(request):
 class AdminFrom(ListView):
     model = Account
     template_name = "attendance/admin_form.html"
-    def get(self,request):
+    def get(self, request):
         if not request.user.is_superuser:
             return HttpResponseRedirect(reverse('Login'))
+        return super().get(request)
+
+    def post(self, request):
+        print("list:")
+        for chk_pk in request.POST.getlist('chk'):
+            account = get_object_or_404(Account,pk=chk_pk)
+            account.delete()
+            User.objects.get(username=account.user.username).delete()
+            system.DeleteSheet(account.user.username)
+            print(account.user)
         return super().get(request)
 
 class Registration(TemplateView):

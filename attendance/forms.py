@@ -10,7 +10,7 @@ class AccountForm(forms.ModelForm):
         # フィールド指定
         fields = ('username','email','password')
         # フィールド名指定
-        labels = {'username':"ユーザーID",'email':"メール"}
+        labels = {'username':"名前",'email':"メールアドレス"}
         help_texts ={'username':""}
         
     password = forms.CharField(widget=forms.PasswordInput(),label="パスワード")
