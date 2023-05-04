@@ -11,6 +11,7 @@
         <caption>STAFF</caption>
         <thead>
           <tr>
+            <th scope="col"><input class="form-check-input"></th>
             <th scope="col">名前</th>
             <th scope="col">状態</th>
             <th scope="col">出勤時間</th>
@@ -23,6 +24,7 @@
         {% for account in object_list %}
             <tr><div class="row position-relative">
             {% if not account.user.username == "admin" %}
+                <th scope="row">yes</th>
                 <th scope="row">
                 <a href="{% url 'Edit' pk=account.pk %}">{{account.user}}
                 </a>
@@ -35,7 +37,7 @@
                     {% if account.is_sending %}&#10004;{% endif %}
                 </td>
                 <td>
-                    <a href="{% url 'PopExcel' user=account.user.username %}" target="_blank" rel="noreferrer noopener">excel</a>
+                    <a href="{% url 'PopExcel' pk=account.pk %}" target="_blank" rel="noreferrer noopener">excel</a>
                 </td> 
                
             {% endif %}

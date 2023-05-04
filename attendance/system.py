@@ -5,8 +5,6 @@ import xlwings as xw
 from mysite2.settings import BASE_DIR
 from datetime import datetime, timedelta, date
 import calendar
-from fpdf import FPDF
-import pdfkit as pdf
 import os
 
 wageTime_dir = BASE_DIR/'excel_sheets/wageTime_sheets 2023'
@@ -18,7 +16,7 @@ def WriteAttendance(account):
 
     now = timezone.localtime(timezone.now())
     username = account.user.username
-    excel_name = '出退勤表　'+str(now.month)+'月.xlsx'
+    excel_name = '出退勤表　'+str(TodayBehind12().month)+'月.xlsx'
     sheet_path = wageTime_dir/excel_name
 
     wb = load_workbook(sheet_path)
@@ -40,16 +38,21 @@ def WriteAttendance(account):
 
     t_start = account.start_time
 
-    account.start_overtime = str(t_start.month)+"/"+str(t_start.day)+" "
+    account.start_overtime = str(TodayBehind12().month)+"/"+str(TodayBehind12().day)+" "
+    
+    is_over = 0
+    if t_start.hour < 12:
+        is_over = 24
+
     if(t_start.minute >= 1 and t_start.minute <= 30):
-        account.start_overtime += str(t_start.hour)+":30"
+        account.start_overtime += str(t_start.hour+is_over)+":30"
         #t_start = t_start.replace(minute=30)
     elif(t_start.minute >= 31 and t_start.minute <= 59):
-        account.start_overtime += str(t_start.hour+1)+":00"
+        account.start_overtime += str(t_start.hour+is_over+1)+":00"
         #t_start = t_start.replace(hour=t_start.hour+1, minute=00) 
         #pd_time = pd.DataFrame({'time':[t_start,t_end]})
     elif(t_start.minute == 00):
-        account.start_overtime += str(t_start.hour)+":00"
+        account.start_overtime += str(t_start.hour+is_over)+":00"
 
     ws.cell(row=t_start.day+2, column=4, value=account.start_overtime.split()[1])
 
@@ -125,8 +128,23 @@ def WriteLeaving(account):
     wb.close()
 
     if(user_number < Account.objects.all().count()):
+        
         wb_daily = load_workbook(dailyReport_sheet)
         ws_daily = wb_daily["Revised"]
+        for title in wb.sheetnames:
+            if title == username:
+                maching_flg = True
+                break
+
+        if maching_flg:
+            ws = wb[username]
+        else:
+            ws = wb.copy_worksheet(wb["ひな形"])
+            ws.freeze_panes = 'A3'
+            ws.title = username
+            ws["E1"] = username
+            wb.save(sheet_path)
+
         ws_daily['O'+str(12+user_number)] = account.end_overtime.split()[1]
         ws_daily['N'+str(12+user_number)] = account.start_overtime.split()[1]
         wb_daily.save(dailyReport_sheet)
@@ -188,6 +206,13 @@ def makenew(month):
 
     app.kill()
 
+def TodayBehind12():
+    now = timezone.localtime(timezone.now())
+    delta = timedelta(days=1)
+    if now.hour < 12:
+        now -= delta
+    print(now.day)
+    return now
 
 def AddSheet(user):
     #xw.App(visible=False)
@@ -232,26 +257,27 @@ def ConvertOvertimeToDatetime(overdatetime):
     print(convertedDateTime)
     return convertedDateTime
 
-def ExcelToPDF():
-    excel_name = '出退勤表　'+str(timezone.now().month)+'月.xlsx'
-    sheet_path = wageTime_dir/excel_name
+# def ExcelToPDF():
+#     excel_name = '出退勤表　'+str(timezone.now().month)+'月.xlsx'
+#     sheet_path = wageTime_dir/excel_name
     
-    workbook = load_workbook(sheet_path)
-    worksheet = workbook["tt"]
+#     workbook = load_workbook(sheet_path)
+#     worksheet = workbook["tt"]
 
-    # PDFファイルを作成
-    pdf = FPDF()
-    pdf.add_page()
+#     # PDFファイルを作成
+#     pdf = FPDF()
+#     pdf.add_page()
 
-    pdf.add_font('IPAGothic', '', '/path/to/IPAGothic.ttf', uni=True)
-    pdf.set_font('IPAGothic', '', 14)
+#     pdf.add_font('IPAGothic', '', '/path/to/IPAGothic.ttf', uni=True)
+#     pdf.set_font('IPAGothic', '', 14)
 
 
-    # Excelファイルの各セルから値を取得してPDFに書き込む
-    for row in worksheet.iter_rows():
-        for cell in row:
-            pdf.cell(40, 10, str(cell.value))
+#     # Excelファイルの各セルから値を取得してPDFに書き込む
+#     for row in worksheet.iter_rows():
+#         for cell in row:
+#             pdf.cell(40, 10, str(cell.value))
 
-    # PDFファイルを保存
-    pdf.output("example.pdf")
-    #pdf.from_file('test.html', 'pdf1.pdf')
+#     # PDFファイルを保存
+#     pdf.output(wageTime_dir/"example1.pdf")
+#     #pdf.from_file('test.html', 'pdf1.pdf')
+    

@@ -71,7 +71,8 @@ def Result(request):
     params = {
         "user"          :account.user,
         "is_working"    :account.is_working,
-        "time"          :now,
+        "time_start"    :account.start_overtime,
+        "time_end"      :account.end_overtime,
         "delta_h"       :int(working_time.total_seconds()/3600),
         "delta_m"       :int((working_time.total_seconds()%3600)/60),
     }
@@ -125,8 +126,11 @@ class Registration(TemplateView):
 
             return render(request,"attendance/register.html" ,context=self.params)
         
-def DownloadExcel(request,user):
+def DownloadExcel(request,pk):
     now = timezone.localtime(timezone.now())
+
+    account = get_object_or_404(Account,pk=pk)
+    user = account.user.username
 
     path ='excel_sheets/wageTime_sheets 2023/'
     excel_name = '出退勤表　'+str(now.month)+'月.xlsx'
@@ -165,6 +169,7 @@ def DownloadExcel(request,user):
 
     #response = HttpResponse(open(path_excel, 'rb').read(), content_type='application/vnd.ms-excel')
     pdf_name = "Time Sheet:"+user+".xlsx"
+    print(pdf_name)
     response = HttpResponse(open(temp_path, 'rb').read(), content_type=mimetypes.guess_type(pdf_name)[0])
     
     response['Content-Disposition'] = f'attachment; filename={pdf_name}'
@@ -175,13 +180,15 @@ def AccountEditer(request, pk):
         account = get_object_or_404(Account,pk=pk)
         prev_name = account.user.username
         user = User.objects.get(username=prev_name)
+
         account.user.username = request.POST.get('username')
         user.username = request.POST.get('username')
         password = request.POST.get('password')
-        account.start_time = system.ConvertOvertimeToDatetime(request.POST.get('start_t'))
-        account.end_time = system.ConvertOvertimeToDatetime(request.POST.get('end_t'))
+        if request.POST.get('start_t') != None:
+            account.start_time = system.ConvertOvertimeToDatetime(request.POST.get('start_t'))
+        if request.POST.get('end_t') != None:
+            account.end_time = system.ConvertOvertimeToDatetime(request.POST.get('end_t'))
         account.is_sending = request.POST.get('is_send') == "on"
-        
         
         if prev_name != account.user.username:
             system.ChangeSheetName(prev_name, account.user.username)
@@ -198,8 +205,6 @@ def AccountEditer(request, pk):
         account = get_object_or_404(Account,pk=pk)
         return render(request,"attendance/account_edit.html", {'ChangedUser':account})
     
-
-
 
 def daily(request):
     
@@ -230,5 +235,5 @@ def daily(request):
 
 def control(request):
     now = timezone.now()
-    system.ExcelToPDF()
+    system.TodayBehind12()
     return render(request,"attendance/outxlsx.html")

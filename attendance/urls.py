@@ -9,7 +9,7 @@ urlpatterns = [
     path("adminform", views.AdminFrom.as_view(), name="AdminForm"),
     path("edit/<int:pk>/", views.AccountEditer, name="Edit"),
     path("register", views.Registration.as_view(), name="Register"),
-    path("pdf/<slug:user>", views.DownloadExcel ,name="PopExcel"),
+    path("pdf/<int:pk>", views.DownloadExcel ,name="PopExcel"),
     path("daily", views.daily ,name="Daily"),
     path("control", views.control, name="Control"),
 ]

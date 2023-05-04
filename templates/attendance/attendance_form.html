@@ -8,9 +8,10 @@
     <p align="center">ログイン中：{{user}}さん</p>
     <form>
     {% if is_working %}
-        <p>出勤時間は{{time}}です．<br>今日も一日頑張りましょう．</p>
+        <p>{{time_start}}に出勤しました．<br>今日も一日頑張りましょう．</p>
     {% else %}
-        <p>{{user}}さんの作業時間は{{delta_h}}時間{{delta_m}}分です．<br>お疲れ様でした．</p>
+        <p>{{time_end}}に退勤しました．
+        <p>本日の作業時間は{{delta_h}}時間{{delta_m}}分です．<br>お疲れ様でした．</p>
         
     {% endif %}
     <button class = "bbutton" onclick="location.href='{% url 'Login' %}'">確認</button>
