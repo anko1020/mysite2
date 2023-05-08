@@ -253,7 +253,16 @@ class SelectSeat(ListView):
         month = now.month
         asign_seats = request.POST.getlist('seat-p')
         check_seats = request.POST.getlist('seat-d')
-        if len(asign_seats) != 0:
+
+        if "dager_button" in request.POST:
+            pk = request.POST.get('dager_button')
+            print(pk)
+            seat = Seat.objects.get(pk=pk)
+            sheet = seat.client.checksheet
+            print("red select")
+            return HttpResponseRedirect(reverse("CheckSheet", kwargs={'pk':sheet.pk}))
+
+        elif len(asign_seats) != 0:
             seat_list = Seat.objects.filter(pk__in=asign_seats)
             print(seat_list)
             client = Client.objects.create(
@@ -281,13 +290,6 @@ class SelectSeat(ListView):
             print(type(sheet.pk))
             return HttpResponseRedirect(reverse("CheckSheet", kwargs={'pk':sheet.pk}))
 
-        elif len(check_seats) != 0:
-            print(check_seats)
-            seat = Seat.objects.get(pk=check_seats[0])
-            sheet = seat.client.checksheet
-            print("red select")
-
-            return HttpResponseRedirect(reverse("CheckSheet", kwargs={'pk':sheet.pk}))
 
         return super().get(request)
 

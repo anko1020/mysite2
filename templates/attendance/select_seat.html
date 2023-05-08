@@ -15,11 +15,14 @@ select_seat
         <input type="checkbox" class="btn-check" name="seat-p" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
         <label class="btn btn-primary p-3" for="seat{{seat}}">{{seat}}</label>
         {% else %}
+        <!--
         <input type="checkbox" class="btn-check" name="seat-d" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
         <label class="btn btn-danger p-3"for="seat{{seat}}">{{seat}}</label>
+        -->
+        <button type="submit" class="btn btn-danger p-3" name="dager_button" value="{{seat.pk}}">{{seat}}</button>
         {% endif %}
     {% endfor %}
-    <input type="submit" name="comp_btn" class=btn btn-primary value="選択">
+    <input type="submit" name="comp_btn" class="btn btn-outline-primary" value="アサイン">
     </div>
 </form>
 </div>

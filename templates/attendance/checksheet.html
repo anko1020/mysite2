@@ -125,6 +125,18 @@ checksheet
 
         </div>
         <br>
+        <div>
+            <table class="table table-bordered table-sm">
+                <tbody>
+                    <tr>
+                        <th scope="row">税込合計金額</th>
+                        <td>
+                            <p name="total-f">0</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         <br>
         <div class="row">
             <div class="d-grid gap-1 mx-auto">
@@ -142,6 +154,7 @@ checksheet
 {% block script %}
 
 $(function(){
+    paymentCalc()
     $('input[name="item_num"]').on("change", paymentCalc);
     $('input[name="item_cost"]').on("change", paymentCalc);
     function paymentCalc(){
@@ -159,6 +172,7 @@ $(function(){
         sum = Math.round(1.2*sum);
         $('p[name="total-10"]').html(Math.round(0.1*sum));
         $('p[name="total-all"]').html(Math.round(1.1*sum));
+        $('p[name="total-f"]').html(Math.round(1.1*sum));
     }
 });
 
