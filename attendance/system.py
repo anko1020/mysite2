@@ -16,7 +16,7 @@ def WriteAttendance(account):
 
     now = timezone.localtime(timezone.now())
     username = account.user.username
-    excel_name = '出退勤表　'+str(TodayBehind12().month)+'月.xlsx'
+    excel_name = '出退勤表　'+str(TodayBehind12(now).month)+'月.xlsx'
     sheet_path = wageTime_dir/excel_name
 
     wb = load_workbook(sheet_path)
@@ -38,7 +38,7 @@ def WriteAttendance(account):
 
     t_start = account.start_time
 
-    account.start_overtime = str(TodayBehind12().month)+"/"+str(TodayBehind12().day)+" "
+    account.start_overtime = str(TodayBehind12(now).month)+"/"+str(TodayBehind12(now).day)+" "
     
     is_over = 0
     if t_start.hour < 12:
@@ -207,17 +207,17 @@ def makenew(month):
 
     app.kill()
 
-def TodayBehind12():
-    now = timezone.localtime(timezone.now())
+def TodayBehind12(datetime):
     delta = timedelta(days=1)
-    if now.hour < 12:
-        now -= delta
-    print(now.day)
-    return now
+    if datetime.hour < 12:
+        datetime -= delta
+    print(datetime.day)
+    return datetime
 
 def AddSheet(user):
+    now = timezone.localtime(timezone.now())
     #xw.App(visible=False)
-    excel_name = '出退勤表　'+str(TodayBehind12().month)+'月.xlsx'
+    excel_name = '出退勤表　'+str(TodayBehind12(now).month)+'月.xlsx'
     sheet_path = wageTime_dir/excel_name
     wb = load_workbook(sheet_path)
     
@@ -240,7 +240,7 @@ def AddSheet(user):
         print('Write excel error')
     
 def DeleteSheet(user):
-    excel_name = '出退勤表　'+str(TodayBehind12().month)+'月.xlsx'
+    excel_name = '出退勤表　'+str(TodayBehind12(now).month)+'月.xlsx'
     sheet_path = wageTime_dir/excel_name
     wb = load_workbook(sheet_path)
 
@@ -272,6 +272,23 @@ def ConvertOvertimeToDatetime(overdatetime):
     print("converted:")
     print(convertedDateTime)
     return convertedDateTime
+
+def ConvertDatetimeToOvertime(datetime):
+    month = TodayBehind12(datetime).month
+    day = TodayBehind12(datetime).day
+    hour = datetime.hour
+    minute = datetime.minute
+    h_zero = ""
+    m_zero = ""
+    if datetime.hour < 12:
+        hour += 24
+    if datetime.hour < 10:
+        h_zero = "0"
+    if datetime.minute < 10:
+        m_zero = "0"
+
+    return str(month)+"/"+str(day)+" "+str(h_zero)+str(hour)+":"+str(m_zero)+str(minute)
+
 
 # def ExcelToPDF():
 #     excel_name = '出退勤表　'+str(timezone.now().month)+'月.xlsx'

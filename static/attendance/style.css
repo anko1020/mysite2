@@ -32,15 +32,8 @@
     background: #000099;
   }
 
-  bbutton{
-    color: #02f;
-    background-color: #000033;
-    font-size: 1.0em;
-    padding: 10px 30px;
-    margin-left:20%;
-
-  }
-  bbutton:hover{
+  .seat{
     color: #fff;
-    background: #000099;
-  }
+    background-color: #ff7bff;
+    border-color: #ff7bff;
+}

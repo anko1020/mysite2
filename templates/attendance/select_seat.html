@@ -1,0 +1,67 @@
+{% extends "attendance/DB5_base.html" %}
+
+{% block title %}
+select_seat
+{% endblock title %}
+{% block body %}
+<header><h1 class="center">席選択シート</h1></header>
+
+<div class="container" name="container">
+<form action="{% url 'SelectSeat' %}" method="post">
+<div class="col">
+  {% csrf_token %}
+    {% for seat in object_list %}
+        {% if not seat.is_use %}
+        <input type="checkbox" class="btn-check" name="seat-p" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
+        <label class="btn btn-primary p-3" for="seat{{seat}}">{{seat}}</label>
+        {% else %}
+        <input type="checkbox" class="btn-check" name="seat-d" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
+        <label class="btn btn-danger p-3"for="seat{{seat}}">{{seat}}</label>
+        {% endif %}
+    {% endfor %}
+    <input type="submit" name="comp_btn" class=btn btn-primary value="選択">
+    </div>
+</form>
+</div>
+
+{% endblock body %}
+
+{% block script %}
+    var is_primary;
+    var is_danger;
+    $(function(){
+        $('input[name="seat-p"]').click(function() {
+            is_primary = false;
+            $('input[name="seat-p"]').each(function(){
+                if($(this).prop('checked')){
+                    is_primary = true;
+                }
+            })
+            if(is_primary && is_danger){
+                ($(this).prop('checked', false));
+                is_primary = false;
+                $('p[name="error1"]').remove();
+                $('div[name="container"]').append('<p name="error1" style="color:red">使用中の席と同時に選択することはできません');
+            }else{
+                $('p[name="error1"]').remove();
+            }
+        });
+        $('input[name="seat-d"]').click(function() {
+            is_danger = false;
+            $('input[name="seat-d"]').each(function(){
+                if($(this).prop('checked')){
+                    is_danger = true;
+                }
+            })
+            if(is_danger && is_primary){
+                is_danger = false;
+                ($(this).prop('checked', false));
+                $('p[name="error1"]').remove();
+                $('div[name="container"]').append('<p name="error1" style="color:red">使用中の席と同時に選択することはできません');
+            }else{
+                $('p[name="error1"]').remove();
+            }
+
+        });
+    });
+{% endblock script %}

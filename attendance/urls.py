@@ -11,5 +11,7 @@ urlpatterns = [
     path("register", views.Registration.as_view(), name="Register"),
     path("pdf/<int:pk>", views.DownloadExcel ,name="PopExcel"),
     path("daily", views.daily ,name="Daily"),
+    path("seat", views.SelectSeat.as_view(), name="SelectSeat"),
+    path("checksheet/<int:pk>", views.CheckEditer.as_view(), name="CheckSheet"),
     path("control", views.control, name="Control"),
 ]

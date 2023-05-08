@@ -1,0 +1,165 @@
+{% extends "attendance/DB5_base.html" %}
+
+{% block title %}
+checksheet
+{% endblock title %}
+{% block body %}
+<div class="container">
+    <header>
+        <h1 class="text-center">会計表</h1>
+    </header>
+    <main>
+        <div class="row">
+            <div class="col">
+                <h4>{{CheckSheet.client.start_time|date:"Y年n月j日"}}</h4> 
+            </div>
+            <div class="col">
+                <div class="col">
+                    <h6>来店 : {{CheckSheet.client.start_overtime}}</h6>
+                  
+                </div>
+                <div class="col">
+                    <h6>退店 : {{CheckSheet.client.end_overtime}}</h2>
+                </div>
+            </div>
+        </row>
+        <form action="{% url 'CheckSheet' pk=CheckSheet.pk %}" method="post">
+            {% csrf_token %}
+        <div style="margin: 20px 50;">
+        <table class="table table-bordered table-sm align-middle">
+            <thead>
+              <tr>
+                <th scope="col">品名</th>
+                <th scope="col">数量</th>
+                <th scope="col">単価</th>
+                <th scope="col">金額</th>
+              </tr>
+            </thead>
+            <tbody>
+                {% for item in CheckSheet.item_set.all %}
+                <tr>
+                  <th scope="row"><input type="text" name="item_name" class="form-control" value="{{item.item_name}}"></th>
+                  <td>
+                      <input type="number" name="item_num" id="itemNumber1" class="form-control" value="{{item.item_num}}" style="width: 60px;"/>
+                     
+                  </td>
+                  <td>
+                      <input type="text" pattern="^[0-9]+$" name="item_cost" id="itemCost1" class="form-control" value="{{item.item_cost}}" style="width: 80px;"/>
+                  </td>
+                  <td>
+                      <p name="total">0</p>
+                  </td>
+                </tr>
+                {% endfor %}
+              <tr>
+            </tbody>
+        </table>
+        
+        </div>
+        <div class="row">
+            <div class="col-7">
+                <label for="table-id">テーブル</label>
+                {% for seat in CheckSheet.client.seat_set.all %}
+                    <h5 id="table-id">{{seat}},</h5>
+                {% endfor %}
+                <br>
+                <div class="row">
+                    <div class="d-flex align-items-center">
+                        <input type="number" name="client_num" class="form-control" value="{{CheckSheet.client.client_num}}" style="width: 60px;">
+                        <h4>　名</h4>
+                    </div>
+                </div>
+                <br>
+                <div class="dropdown">
+                    <label for="dropdownMenuButton1">係</label><br>
+                    <button class="btn btn-ontline-info dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                        {{staff.1}}
+                    </button>
+                    <ul class="dropdown-menu" name="staff" aria-labelledby="dropdownMenuButton1">
+                    {% for account in staff %}
+                    {% if not account.user.username == "admin" %}
+                        <li><a class="dropdown-item">{{account}}</a></li>
+                    {% endif %}
+                    {% endfor %}
+                   
+                    </ul>
+                </div>
+            </div>
+            <div class="col-4">
+                
+                <table class="table table-bordered table-sm">
+                    <tbody>
+                        <tr>
+                            <th scope="row">小計</th>
+                            <td>
+                                <p name="total-s-all">0</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">サービス料</th>
+                            <td>
+                                <p name="total-20">0</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">消費税</th>
+                            <td>                                
+                                <p name="total-10">0</p>
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <th scope="row">税込合計</th>
+                            <td>
+                                <p name="total-all">0</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="d-flex align-items-center">
+        <input type="text" name="client_name" class="form-control" value="{{CheckSheet.client}}" style="width: 200px;">
+        <h4>様</h4> 
+       
+
+        </div>
+        <br>
+        <br>
+        <div class="row">
+            <div class="d-grid gap-1 mx-auto">
+                <input type="submit" class="btn btn-ontline-primary" name="save" value="保存">
+                <input type="submit" class="btn btn-ontline-success" name="payment" value="会計">
+            </div> 
+        </div>
+        </form>
+    </main>
+
+</div>
+
+{% endblock body %}
+
+{% block script %}
+
+$(function(){
+    $('input[name="item_num"]').on("change", paymentCalc);
+    $('input[name="item_cost"]').on("change", paymentCalc);
+    function paymentCalc(){
+        var sum = 0
+        for(var i=0;i<$('input[name="item_num"]').length;i++){
+            var num = $('input[name="item_num"]').eq(i).val();
+            var cost = $('input[name="item_cost"]').eq(i).val();
+            var totals = num*cost;
+            sum += totals;
+            $('p[name="total"]').eq(i).html(num*cost);
+            //alert();
+        }
+        $('p[name="total-s-all"]').html(sum);
+        $('p[name="total-20"]').html(Math.round(0.2*sum));
+        sum = Math.round(1.2*sum);
+        $('p[name="total-10"]').html(Math.round(0.1*sum));
+        $('p[name="total-all"]').html(Math.round(1.1*sum));
+    }
+});
+
+{% endblock script %}

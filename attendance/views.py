@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404, render
-from django.views.generic import TemplateView, ListView, FormView
+from django.views.generic import TemplateView, ListView, FormView, DetailView
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
@@ -19,7 +19,7 @@ from . import system
 import os
 from .forms import AccountForm
 from datetime import datetime, timedelta
-from .models import Account
+from .models import Account, Seat, Client, CheckSheet, Item
 
 def Login(request):
 
@@ -243,7 +243,104 @@ def daily(request):
     response['Content-Disposition'] = f'attachment; filename={pdf_name}'
     return response
 
+class SelectSeat(ListView):
+    model = Seat
+    template_name = "attendance/select_seat.html"
+    def post(self, request):
+        now = timezone.localtime(timezone.now())
+        day = system.TodayBehind12(now).day
+
+        month = now.month
+        asign_seats = request.POST.getlist('seat-p')
+        check_seats = request.POST.getlist('seat-d')
+        if len(asign_seats) != 0:
+            seat_list = Seat.objects.filter(pk__in=asign_seats)
+            print(seat_list)
+            client = Client.objects.create(
+                client_name     =   "",
+                client_num      =   len(asign_seats),
+                start_time      =   now,
+                end_time        =   now,
+                start_overtime  =   system.ConvertDatetimeToOvertime(now),
+                end_overtime    =   ""
+            )
+            sheet = CheckSheet.objects.create(total_fee=0, client=client)
+            for seat in seat_list:
+                seat.client = client
+                seat.is_use = True
+                seat.save()
+                print(seat)
+            for i in range(3):
+                item_obj = Item.objects.create(
+                    item_name = "",
+                    item_num = 0,
+                    item_cost = 0,
+                    checkSheet = sheet,
+                )
+            client.save()
+            print(type(sheet.pk))
+            return HttpResponseRedirect(reverse("CheckSheet", kwargs={'pk':sheet.pk}))
+
+        elif len(check_seats) != 0:
+            print(check_seats)
+            seat = Seat.objects.get(pk=check_seats[0])
+            sheet = seat.client.checksheet
+            print("red select")
+
+            return HttpResponseRedirect(reverse("CheckSheet", kwargs={'pk':sheet.pk}))
+
+        return super().get(request)
+
+class CheckEditer(TemplateView):
+
+    def get(self, request, pk):
+        context = {
+            "staff": Account.objects.all(),
+            "CheckSheet": get_object_or_404(CheckSheet, pk=pk)
+            }
+        return render(request,"attendance/checksheet.html", context)
+    def post(self, request, pk):
+
+        item_name_list = request.POST.getlist('item_name')
+        item_num_list = request.POST.getlist('item_num')
+        item_cost_list = request.POST.getlist('item_cost')
+
+        check_sheet_obj = get_object_or_404(CheckSheet, pk=pk)
+        
+        print(request.POST.get('client_name'))
+        client_obj = check_sheet_obj.client
+        client_obj.client_name = request.POST.get('client_name')
+        client_obj.client_num = request.POST.get('client_num')
+        client_obj.save()
+
+        i = 0
+        for item_obj in check_sheet_obj.item_set.all():
+            item_obj.item_name = item_name_list[i]
+            item_obj.item_num = item_num_list[i]
+            item_obj.item_cost = item_cost_list[i]
+            print(item_obj)
+            i += 1
+            item_obj.save()
+        
+
+        if "payment" in request.POST:
+            god_client = get_object_or_404(Client, client_name="clientGOD")
+            for seat in check_sheet_obj.client.seat_set.all():
+                seat.client = god_client
+                seat.is_use = False
+                seat.save()
+            print(check_sheet_obj.client)
+            now = timezone.now()
+            check_sheet_obj.end_time = now
+            check_sheet_obj.client.end_overtime = system.ConvertDatetimeToOvertime(now)
+            check_sheet_obj.client.delete()
+
+        print(check_sheet_obj)
+        return HttpResponseRedirect(reverse("SelectSeat"))
+  
+
+
 def control(request):
     now = timezone.now()
-    system.TodayBehind12()
+    system.TodayBehind12(now)
     return render(request,"attendance/outxlsx.html")
