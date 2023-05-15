@@ -21,8 +21,11 @@ class Account(models.Model):
         return self.user.username
 
 
-class Client(models.Model):
-    
+class CheckSheet(models.Model):
+    total_fee = models.IntegerField(default=0)
+    discount = models.IntegerField(default=0)
+    asign = models.BooleanField(default=False)
+
     client_name = models.CharField(max_length=20, null=True)
     client_num = models.IntegerField(default=0)
 
@@ -31,14 +34,17 @@ class Client(models.Model):
 
     start_overtime = models.CharField(max_length=20, null=True)
     end_overtime = models.CharField(max_length=20, null=True)
+
+    memo_str = models.CharField(max_length=100, null=True)
     
     def __str__(self):
         return self.client_name
 
 
-class CheckSheet(models.Model):
-    total_fee = models.IntegerField(default=0)
-    client = models.OneToOneField(Client, on_delete=models.CASCADE)
+class ItemMenu(models.Model):
+    menu = models.CharField(max_length=10, null=True)
+    def __str__(self):
+        return self.menu
 
 
 class Item(models.Model):
@@ -47,15 +53,15 @@ class Item(models.Model):
     item_cost = models.IntegerField()
 
     checkSheet = models.ForeignKey(CheckSheet, on_delete=models.CASCADE)
+    Menu = models.ForeignKey(ItemMenu, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.item_name
 
 
-
 class Seat(models.Model):
     Seat_ID = models.CharField(max_length=10, null=True)
-    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+    CheckSheet = models.ForeignKey(CheckSheet, on_delete=models.CASCADE)
     
     is_use = models.BooleanField(default=False)
 

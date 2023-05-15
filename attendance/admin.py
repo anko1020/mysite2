@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from .models import Account, Seat, CheckSheet, Client, Item
+from . import models
 
-admin.site.register(Account)
-admin.site.register(Seat)
-admin.site.register(CheckSheet)
-admin.site.register(Client)
-admin.site.register(Item)
+admin.site.register(models.Account)
+admin.site.register(models.Seat)
+admin.site.register(models.CheckSheet)
+admin.site.register(models.ItemMenu)
+admin.site.register(models.Item)

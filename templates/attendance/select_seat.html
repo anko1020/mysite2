@@ -1,19 +1,22 @@
 {% extends "attendance/DB5_base.html" %}
 
 {% block title %}
-select_seat
+select seat
 {% endblock title %}
-{% block body %}
-<header><h1 class="center">席選択シート</h1></header>
 
-<div class="container" name="container">
+{% block body %}
+<header></header>
+
+<div class="container" name="container"><br>
 <form action="{% url 'SelectSeat' %}" method="post">
-<div class="col">
-  {% csrf_token %}
+    <div class="col" style="background-color: lavenderblush;">
+    {% csrf_token %}
     {% for seat in object_list %}
         {% if not seat.is_use %}
-        <input type="checkbox" class="btn-check" name="seat-p" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
-        <label class="btn btn-primary p-3" for="seat{{seat}}">{{seat}}</label>
+        <span>
+            <input type="checkbox" class="btn-check" name="seat-p" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
+            <label class="btn btn-primary p-3" for="seat{{seat}}" name="p_label">{{seat}}</label>
+        </span> 
         {% else %}
         <!--
         <input type="checkbox" class="btn-check" name="seat-d" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
@@ -23,6 +26,63 @@ select_seat
         {% endif %}
     {% endfor %}
     <input type="submit" name="comp_btn" class="btn btn-outline-primary" value="アサイン">
+    </div>
+    <br>
+    <h2>会計表</h2>
+    <div>
+    <div class="asign_table">
+        <h5>-未会計-</h5>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                <th scope="col">お客様名</th>
+                <th scope="col">席</th>
+                <th scope="col">来店時間</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sheet in CheckSheet_list %}
+                {% if sheet.client_name != "clientGOD" and sheet.asign %}
+                    <tr data-href="{% url 'CheckSheet' pk=sheet.pk %}">
+                    <td>{{sheet.client_name}}</td>
+                    <td>
+                        {% for seat in sheet.seat_set.all %}
+                            {{seat}},
+                        {% endfor %}
+                    </td>
+                    <td>{{sheet.start_overtime}}</td>
+                    </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+        <br>
+        <div class="non_asign_table">
+            <h5>-会計済-</h5>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                    <th scope="col">お客様名</th>
+                    <th scope="col">お支払い金額</th>
+                    <th scope="col">来店時間</th>
+                    <th scope="col">退店時間</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sheet in CheckSheet_list %}
+                    {% if sheet.client_name != "clientGOD" and not sheet.asign %}
+                        <tr data-href="{% url 'CheckSheet' pk=sheet.pk %}">
+                        <td>{{sheet.client_name}}</td>
+                        <td>¥{{sheet.total_fee}}</td>
+                        <td>{{sheet.start_overtime}}</td>
+                        <td>{{sheet.end_overtime}}</td>
+                        </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+    </div>
+
     </div>
 </form>
 </div>
@@ -38,6 +98,11 @@ select_seat
             $('input[name="seat-p"]').each(function(){
                 if($(this).prop('checked')){
                     is_primary = true;
+                    //alert("dd");
+                    //alert($(this).parent().find('label').attr("class"));
+                    $(this).parent().find('label').css('background-color', 'limegreen');
+                }else{
+                    $(this).parent().find('label').css('background-color', '');
                 }
             })
             if(is_primary && is_danger){
@@ -64,7 +129,13 @@ select_seat
             }else{
                 $('p[name="error1"]').remove();
             }
-
         });
+        //$('tr[data-href]').addClass('clickable');
+        $('tr[data-href]').click(function(){
+            //alert($(this).data("href"));
+            location.href = $(this).data("href");
+        })
+    
     });
+
 {% endblock script %}
