@@ -63,6 +63,9 @@ class Seat(models.Model):
     Seat_ID = models.CharField(max_length=10, null=True)
     CheckSheet = models.ForeignKey(CheckSheet, on_delete=models.CASCADE)
     
+    pos_x = models.IntegerField(default=0)
+    pos_y = models.IntegerField(default=0)
+
     is_use = models.BooleanField(default=False)
 
     def __str__(self):

@@ -9,27 +9,28 @@ select seat
 
 <div class="container" name="container"><br>
 <form action="{% url 'SelectSeat' %}" method="post">
-    <div class="col" style="background-color: lavenderblush;">
     {% csrf_token %}
-    {% for seat in object_list %}
-        {% if not seat.is_use %}
-        <span>
-            <input type="checkbox" class="btn-check" name="seat-p" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
-            <label class="btn btn-primary p-3" for="seat{{seat}}" name="p_label">{{seat}}</label>
-        </span> 
-        {% else %}
-        <!--
-        <input type="checkbox" class="btn-check" name="seat-d" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
-        <label class="btn btn-danger p-3"for="seat{{seat}}">{{seat}}</label>
-        -->
-        <button type="submit" class="btn btn-danger p-3" name="dager_button" value="{{seat.pk}}">{{seat}}</button>
-        {% endif %}
-    {% endfor %}
-    <input type="submit" name="comp_btn" class="btn btn-outline-primary" value="アサイン">
+    <div class="col position-relative" style="background-color: lavenderblush; height: 500px;">
+        {% for seat in object_list %}
+            <div style="position: absolute; left: {{seat.pos_x}}px; top: {{seat.pos_y}}px">
+            {% if not seat.is_use %}
+                <span>
+                    <input type="checkbox" class="btn-check" name="seat-p" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
+                    <label class="btn btn-primary p-3" for="seat{{seat}}" name="p_label">{{seat}}</label>
+                </span> 
+                {% else %}
+                <!--
+                <input type="checkbox" class="btn-check" name="seat-d" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
+                <label class="btn btn-danger p-3"for="seat{{seat}}">{{seat}}</label>
+                -->
+                <button type="submit" class="btn btn-danger p-3" name="dager_button" value="{{seat.pk}}">{{seat}}</button>
+            {% endif %}
+            </div>
+        {% endfor %}
     </div>
+    <input type="submit" name="comp_btn" class="btn btn-outline-primary" value="アサイン">
     <br>
     <h2>会計表</h2>
-    <div>
     <div class="asign_table">
         <h5>-未会計-</h5>
         <table class="table table-striped">
@@ -83,7 +84,6 @@ select seat
             </table>
     </div>
 
-    </div>
 </form>
 </div>
 
