@@ -276,6 +276,7 @@ class SelectSeat(ListView):
             sheet = CheckSheet.objects.create(
                 total_fee       =   0,
                 discount        =   0,
+                how_cash        =   "現金",
                 asign           =   False,
                 client_name     =   "",
                 client_num      =   len(asign_seats),
@@ -328,10 +329,22 @@ class CheckEditer(TemplateView):
             check_sheet_obj = get_object_or_404(CheckSheet, pk=pk)
         except:
             return HttpResponseRedirect(reverse("SelectSeat"))
+            
+        if "cancel" in request.POST:
+            print("cancel")
+            god = get_object_or_404(CheckSheet, client_name="clientGOD")
+            for seat in check_sheet_obj.seat_set.all():
+                seat.CheckSheet = god
+                seat.is_use = False
+                seat.save()
+            print(check_sheet_obj)
+            check_sheet_obj.delete()
+            return HttpResponseRedirect(reverse("SelectSeat"))
         
         print(request.POST.get('total_pay'))
         check_sheet_obj.total_fee = request.POST.get('total_pay')
         check_sheet_obj.discount = request.POST.get('discount')
+        check_sheet_obj.how_cash = request.POST.get('how_cash')
         check_sheet_obj.asign = True
         check_sheet_obj.client_name = request.POST.get('client_name')
         check_sheet_obj.client_num = request.POST.get('client_num')
@@ -359,9 +372,8 @@ class CheckEditer(TemplateView):
                 )
                 print(j)
             
-        
 
-        if "payment" in request.POST or "cancel" in request.POST:
+        if "payment" in request.POST:
             god = get_object_or_404(CheckSheet, client_name="clientGOD")
             for seat in check_sheet_obj.seat_set.all():
                 seat.CheckSheet = god
@@ -373,7 +385,7 @@ class CheckEditer(TemplateView):
             check_sheet_obj.end_overtime = system.ConvertDatetimeToOvertime(now)
             check_sheet_obj.asign = False
             check_sheet_obj.save()
-            #check_sheet_obj.delete()
+
 
         print(check_sheet_obj)
         return HttpResponseRedirect(reverse("SelectSeat"))
@@ -382,7 +394,5 @@ class CheckEditer(TemplateView):
 
 def control(request):
     now = timezone.localtime(timezone.now())
-    system.ConvertDatetimeToOvertime(now)
-    print(now)
-    print(system.ConvertDatetimeToOvertime(now))
+    
     return render(request,"attendance/outxlsx.html")

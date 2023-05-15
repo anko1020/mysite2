@@ -24,6 +24,8 @@ class Account(models.Model):
 class CheckSheet(models.Model):
     total_fee = models.IntegerField(default=0)
     discount = models.IntegerField(default=0)
+    how_cash = models.CharField(max_length=20, null=True)
+
     asign = models.BooleanField(default=False)
 
     client_name = models.CharField(max_length=20, null=True)

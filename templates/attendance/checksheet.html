@@ -7,7 +7,8 @@ checksheet
 <div class="container">
     <form action="{% url 'CheckSheet' pk=CheckSheet.pk %}" method="post">
     {% csrf_token %}
-    <input type="hidden" class="form-control" name="total_pay" id="total_fee" value="0">
+    <input type="hidden" class="form-control" name="total_pay" id="total_fee" value="{{CheckSheet.total_fee}}">
+    <input type="hidden" class="form-control" name="how_cash" id="cash_p" value="{{CheckSheet.how_cash}}">
   
     {% if not CheckSheet.asign %}
         <input type="submit" class="btn btn-primary" name="cancel" value="アサインをキャンセル">
@@ -45,7 +46,7 @@ checksheet
                     <tr id="item_field">
                         <td>
                             <div class="input-group mb-2" name="item_name">
-                                <input type="text" name="item_name" class="form-control" aria-label="Text input with dropdown button" value="{{item.item_name}}">
+                                <input type="text" name="item_name" class="form-control" aria-label="Text input with dropdown button" value="{{item.item_name}}" style="width: 80px;">
                                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria_expanded="true"></button>
                                 <ul class="dropdown-menu">
                                     {% for item in Menu.item_set.all %}
@@ -173,7 +174,15 @@ checksheet
                     </tr>
                 </tbody>
             </table>
-        </div>
+            <div class="dropdown" id="cash_how">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                現金
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <li><a class="dropdown-item">現金</a></li>
+                    <li><a class="dropdown-item">クレジットカード</a></li>
+                </ul>
+          </div>
         <br>
         <div class="row">
             <div class="d-grid gap-1 mx-auto" id="submit_button">
@@ -264,7 +273,13 @@ $(function(){
 
     $('#all_staff').on("click", 'li', function(){
         //alert($(this).text());
-        $(this).parents('div[name="staff_select"]').find('button').text($(this).text());
+        $(this).parents('#all_staff').find('button').text($(this).text());
+    })
+    
+    $('#cash_how').on("click", 'li', function(){
+        //alert($(this).text());
+        $(this).parents('#cash_how').find('button').text($(this).text());
+        $('#cash_p').val($(this).text());
     })
 
 });

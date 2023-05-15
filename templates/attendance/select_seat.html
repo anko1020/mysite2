@@ -10,20 +10,20 @@ select seat
 <div class="container" name="container"><br>
 <form action="{% url 'SelectSeat' %}" method="post">
     {% csrf_token %}
-    <div class="col position-relative" style="background-color: lavenderblush; height: 500px;">
+    <div class="col position-relative" style="background-color: lavenderblush; height: 300px;">
         {% for seat in object_list %}
             <div style="position: absolute; left: {{seat.pos_x}}px; top: {{seat.pos_y}}px">
             {% if not seat.is_use %}
                 <span>
                     <input type="checkbox" class="btn-check" name="seat-p" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
-                    <label class="btn btn-primary p-3" for="seat{{seat}}" name="p_label">{{seat}}</label>
+                    <label class="btn btn-primary p-2" for="seat{{seat}}" name="p_label">{{seat}}</label>
                 </span> 
                 {% else %}
                 <!--
                 <input type="checkbox" class="btn-check" name="seat-d" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
                 <label class="btn btn-danger p-3"for="seat{{seat}}">{{seat}}</label>
                 -->
-                <button type="submit" class="btn btn-danger p-3" name="dager_button" value="{{seat.pk}}">{{seat}}</button>
+                <button type="submit" class="btn btn-danger p-2" name="dager_button" value="{{seat.pk}}">{{seat}}</button>
             {% endif %}
             </div>
         {% endfor %}
@@ -38,6 +38,7 @@ select seat
                 <tr>
                 <th scope="col">お客様名</th>
                 <th scope="col">席</th>
+                <th scope="col">お支払い金額</th>
                 <th scope="col">来店時間</th>
                 </tr>
             </thead>
@@ -51,6 +52,7 @@ select seat
                             {{seat}},
                         {% endfor %}
                     </td>
+                    <td>¥{{sheet.total_fee}}</td>
                     <td>{{sheet.start_overtime}}</td>
                     </tr>
                 {% endif %}
