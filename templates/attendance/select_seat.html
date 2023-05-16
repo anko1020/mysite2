@@ -19,10 +19,6 @@ select seat
                     <label class="btn btn-primary p-2" for="seat{{seat}}" name="p_label">{{seat}}</label>
                 </span> 
                 {% else %}
-                <!--
-                <input type="checkbox" class="btn-check" name="seat-d" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
-                <label class="btn btn-danger p-3"for="seat{{seat}}">{{seat}}</label>
-                -->
                 <button type="submit" class="btn btn-danger p-2" name="dager_button" value="{{seat.pk}}">{{seat}}</button>
             {% endif %}
             </div>

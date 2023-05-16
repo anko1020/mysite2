@@ -13,5 +13,6 @@ urlpatterns = [
     path("daily", views.daily ,name="Daily"),
     path("seat", views.SelectSeat.as_view(), name="SelectSeat"),
     path("checksheet/<int:pk>", views.CheckEditer.as_view(), name="CheckSheet"),
+    path("compSheet/<int:pk>", views.CompCheckSheet.as_view(), name="CompSheet"),
     path("control", views.control, name="Control"),
 ]

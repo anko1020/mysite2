@@ -1,0 +1,182 @@
+{% extends "attendance/DB5_base.html" %}
+
+
+{% block body %}
+<header></header>
+
+<div class="container">
+    <form action="{% url 'CompSheet' pk=CheckSheet.pk %}" method="post">
+        {% csrf_token %}
+        <input type="submit" class="btn btn-outline-danger" name="cancel" value="戻る">
+        <header>
+            <h1 class="text-center">会計表</h1>
+        </header>
+        <div class="row">
+            <div class="col">
+                <h4>{{CheckSheet.start_time|date:"Y年n月j日"}}</h4> 
+            </div>
+            <div class="col">
+                <div class="col">
+                    <h6>来店 : {{CheckSheet.start_overtime}}</h6>
+                
+                </div>
+                <div class="col">
+                    <h6>退店 : {{CheckSheet.end_overtime}}</h2>
+                </div>
+            </div>
+        </row>  
+        <div style="background-color: lightcyan; height: auto;">
+            <div>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                    <tr>
+                        <th scope="col">品名</th>
+                        <th scope="col">数量</th>
+                        <th scope="col">単価</th>
+                        <th scope="col">金額</th>
+                    </tr>
+                    </thead>
+                    <tbody id="order" style="vertical-align: middle">
+                        {% for item in CheckSheet.item_set.all %}
+                            <tr id="item_field" style="text-align: center;">
+                                <td>
+                                    <h6>{{item.item_name}}</h6>
+                                </td>
+                                <td >
+                                    <h6 class="item_num">{{item.item_num}}</h6>
+                                </td>
+                                <td>
+                                    <h6 class="item_cost">{{item.item_cost}}</h6>
+                                </td>
+                                <td>
+                                    <h6 class="item_total">0</h6>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <div class="row">
+                    <div class="col-4">
+
+                        <div>
+                            <label for="table-id">テーブル</label>
+                            <h4 id="table-id">
+                            {% for seat in CheckSheet.seat_set.all %}
+                                {{seat}},
+                            {% endfor %}
+                            </h4>
+                            <label for="dropdownMenuButton1">係</label>
+                            <div class="col-auto">
+                                <div class="row" name="staffs">
+                                    <h5>
+                                        {% for selectedStaff in CheckSheet.staff.all %}
+                                            {{selectedStaff}},
+                                        {% endfor %}
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-8">
+                        <table class="table table-bordered table-sm align-middle">
+                            <tbody style="text-align: center;">
+                                <tr>
+                                    <th>小計</th>
+                                    <td >
+                                        <h6 id="total-s">0</h6>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>サービス料</th>
+                                    <td>
+                                        <h6 id="total-20">0</h6>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>消費税</th>
+                                    <td>                                
+                                        <h6 id="total-10">0</h6>
+                                    </td>
+
+                                </tr>
+                                <tr>
+                                    <th>税込合計</th>
+                                    <td>
+                                        <h6 id="total-all">0</h6>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>割引</th>
+                                    <td>
+                                        <h6 id="discount">{{CheckSheet.discount}}</h6> 
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div>
+            <br>
+            <div class="row">
+                <div class="col-3" style="text-align: center">
+                    <h3>{{CheckSheet}}</h3>
+                </div>
+                <div class="col-2">
+                    <h5>様</h5>
+                </div>
+
+
+            </div>
+            <table class="table table-bordered">
+                <tbody style="text-align: center">
+                    <tr>
+                        <th style="background-color: lightgrey;">税込合計金額</th>
+                        <td style="background-color: lightcyan;">
+                            <h5 id="total-f">¥0</h5>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <input type="submit" class="btn btn-outline-success" value="確認">
+    </form>
+
+</div>
+
+{% endblock body %}
+
+    
+{% block script %}
+
+$(function(){
+    paymentCalc();
+
+    var total = 0;
+    function paymentCalc(){
+        var sum = 0;
+        for(var i=0;i<$('.item_num').length;i++){
+            var num = $('.item_num').eq(i).text();
+            var cost = $('.item_cost').eq(i).text();
+            var totals = num*cost;
+            $('.item_total').eq(i).text(totals);
+            sum += totals;
+        }
+        $('#total-s').text(sum);
+        $('#total-20').text(Math.round(0.2*sum));
+        sum = Math.round(1.2*sum);
+        $('#total-10').text(Math.round(0.1*sum));
+        $('#total-all').text(Math.round(1.1*sum));
+        var discount = $('#discount').text();
+        total = Math.round(1.1*sum)+discount*1
+        $('#total-f').text("¥"+total);
+    }
+
+});
+
+{% endblock script %}

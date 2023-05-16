@@ -10,7 +10,7 @@ checksheet
     <input type="hidden" class="form-control" name="total_pay" id="total_fee" value="{{CheckSheet.total_fee}}">
     <input type="hidden" class="form-control" name="how_cash" id="cash_p" value="{{CheckSheet.how_cash}}">
   
-    {% if not CheckSheet.asign %}
+    {% if not CheckSheet.asign and CheckSheet.end_overtime == "" %}
         <input type="submit" class="btn btn-primary" name="cancel" value="アサインをキャンセル">
     {% endif %}
         <header>
@@ -30,7 +30,7 @@ checksheet
                     <h6>退店 : {{CheckSheet.end_overtime}}</h2>
                 </div>
             </div>
-        </row>  
+        </div>  
         <div style="margin: 20px 50;">
         <table class="table table-bordered table-sm align-middle" name="order_table">
             <thead>
@@ -68,6 +68,7 @@ checksheet
                 {% endfor %}
             </tbody>
         </table>
+        </div>
         <div class="section1 text-center">
             <button type="button" class="btn btn-outline-primary rounded-circle p-0" name="orderAdd" style="width:2rem;height:2rem;"><h4>＋</h4></button>
         </div>
@@ -93,12 +94,10 @@ checksheet
                         <div class="row" name="staffs">
                             <div class="col-auto" name="staff_select">
                                 <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    {% for account in Staff|slice:":1" %}
-                                    {% if not account.user.username == "admin" %}
-                                        {{account}}
-                                    {% endif %}
-                                    {% endfor %}
+                                    {{Staff.0}}
                                 </button>
+                                <input type="hidden" class="form-control" name="staff_account" value="{{Staff.0}}">
+                                   
                                 <ul class="dropdown-menu" name="staff" aria-labelledby="dropdownMenuButton1">
                                 {% for account in Staff %}
                                 {% if not account.user.username == "admin" %}
@@ -107,12 +106,29 @@ checksheet
                                 {% endfor %}
                                 </ul>
                             </div>
+                            {% for selectedStaff in CheckSheet.staff.all %}{% if selectedStaff != Staff.0 %}
+                            
+                            <div class="col-auto" name="staff_select">
+                                <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    {{selectedStaff}}
+                                </button>
+                                <input type="hidden" class="form-control" name="staff_account" value="{{Staff.0}}">
+                                   
+                                <ul class="dropdown-menu" name="staff" aria-labelledby="dropdownMenuButton1">
+                                {% for account in Staff %}
+                                {% if not account.user.username == "admin" %}
+                                    <li><a class="dropdown-item">{{account}}</a></li>
+                                {% endif %}
+                                {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}{% endfor %}
                         </div>
                     </div>
-                    <div class="col-1">
+                    <div class="col-2">
                         <button type="button" class="btn btn-otline-info rounded-circle p-1" name="staffAdd" style="width:2rem;height:2rem;"><h4>＋</h4></button>
                     </div>
-                    <div class="col-1">
+                    <div class="col-2">
                         <button type="button" class="btn btn-otline-info rounded-circle p-1" name="staffDelete" style="width:2rem;height:2rem;"><h4>－</h4></button>
                     </div>
                 </div>
@@ -157,10 +173,8 @@ checksheet
             </div>
         </div>
         <div class="d-flex align-items-center">
-        <input type="text" name="client_name" class="form-control" value="{{CheckSheet}}" style="width: 200px;">
-        <h4>様</h4> 
-       
-
+            <input type="text" name="client_name" class="form-control" value="{{CheckSheet}}" style="width: 200px;">
+            <h4>様</h4>
         </div>
         <br>
         <div>
@@ -175,14 +189,16 @@ checksheet
                 </tbody>
             </table>
             <div class="dropdown" id="cash_how">
+                <h5>お支払い方法</h5>
                 <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                現金
+                {{CheckSheet.how_cash}}
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                     <li><a class="dropdown-item">現金</a></li>
                     <li><a class="dropdown-item">クレジットカード</a></li>
                 </ul>
-          </div>
+            </div>
+        </div>
         <br>
         <div class="row">
             <div class="d-grid gap-1 mx-auto" id="submit_button">
@@ -199,7 +215,6 @@ checksheet
         </div>
         <br>
     </main>
-
     </form>
 </div>
 
@@ -271,9 +286,10 @@ $(function(){
         paymentCalc();
     })
 
-    $('#all_staff').on("click", 'li', function(){
-        //alert($(this).text());
-        $(this).parents('#all_staff').find('button').text($(this).text());
+    $('div[name="staffs"]').on("click", 'li', function(){
+        //alert($(this).parents('div[name="staff_select"]').find('input').attr("class"));
+        $(this).parents('div[name="staff_select"]').find('button').text($(this).text());
+        $(this).parents('div[name="staff_select"]').find('input').val($(this).text());
     })
     
     $('#cash_how').on("click", 'li', function(){

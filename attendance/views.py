@@ -318,13 +318,15 @@ class CheckEditer(TemplateView):
             "Menu": get_object_or_404(ItemMenu, menu="Default"),
             }
         return render(request,"attendance/checksheet.html", context)
+
     def post(self, request, pk):
 
         item_name_list = request.POST.getlist('item_name')
         item_num_list = request.POST.getlist('item_num')
         item_cost_list = request.POST.getlist('item_cost')
+        staff_list = request.POST.getlist('staff_account')
         print("len(item_name_list)")
-        print(item_name_list)
+        print(staff_list)
         try:
             check_sheet_obj = get_object_or_404(CheckSheet, pk=pk)
         except:
@@ -342,13 +344,21 @@ class CheckEditer(TemplateView):
             return HttpResponseRedirect(reverse("SelectSeat"))
         
         print(request.POST.get('total_pay'))
+
+        for staff in staff_list:
+            user = get_object_or_404(User, username=staff)
+            account = get_object_or_404(Account, user=user)
+            check_sheet_obj.staff.add(account)
+            print(account)
+
         check_sheet_obj.total_fee = request.POST.get('total_pay')
         check_sheet_obj.discount = request.POST.get('discount')
         check_sheet_obj.how_cash = request.POST.get('how_cash')
-        check_sheet_obj.asign = True
         check_sheet_obj.client_name = request.POST.get('client_name')
         check_sheet_obj.client_num = request.POST.get('client_num')
         check_sheet_obj.memo_str = request.POST.get('memo')
+        if check_sheet_obj.end_overtime == "":
+            check_sheet_obj.asign = True
         check_sheet_obj.save()
         
         i = 0
@@ -374,25 +384,46 @@ class CheckEditer(TemplateView):
             
 
         if "payment" in request.POST:
-            god = get_object_or_404(CheckSheet, client_name="clientGOD")
-            for seat in check_sheet_obj.seat_set.all():
-                seat.CheckSheet = god
-                seat.is_use = False
-                seat.save()
-            print(check_sheet_obj)
-            now = timezone.localtime(timezone.now())
-            check_sheet_obj.end_time = now
-            check_sheet_obj.end_overtime = system.ConvertDatetimeToOvertime(now)
-            check_sheet_obj.asign = False
-            check_sheet_obj.save()
+            return HttpResponseRedirect(reverse("CompSheet", kwargs={'pk':check_sheet_obj.pk}))
+          
 
 
         print(check_sheet_obj)
         return HttpResponseRedirect(reverse("SelectSeat"))
   
+class CompCheckSheet(TemplateView):
+    
+    def get(self, request, pk):
+        context = {
+            "CheckSheet": get_object_or_404(CheckSheet, pk=pk),
+            }
+        return render(request,"attendance/comp_checksheet.html", context)
+
+    def post(self, request, pk):
+
+        try:
+            check_sheet_obj = get_object_or_404(CheckSheet, pk=pk)
+        except:
+            return HttpResponseRedirect(reverse("SelectSeat"))
+
+        god = get_object_or_404(CheckSheet, client_name="clientGOD")
+        for seat in check_sheet_obj.seat_set.all():
+            seat.CheckSheet = god
+            seat.is_use = False
+            seat.save()
+
+        print(check_sheet_obj)
+        now = timezone.localtime(timezone.now())
+        check_sheet_obj.end_time = now
+        check_sheet_obj.end_overtime = system.ConvertDatetimeToOvertime(now)
+        check_sheet_obj.asign = False
+        check_sheet_obj.save()
+        
+        return HttpResponseRedirect(reverse("SelectSeat"))
 
 
 def control(request):
     now = timezone.localtime(timezone.now())
+    
     
     return render(request,"attendance/outxlsx.html")
