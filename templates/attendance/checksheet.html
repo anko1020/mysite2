@@ -183,7 +183,7 @@ checksheet
                     <tr>
                         <th scope="row">税込合計金額</th>
                         <td>
-                            <p class="form-control" name="total-f">0</p>
+                            <input class="form-control" name="total-f" value="{{CheckSheet.total_fee}}">
                         </td>
                     </tr>
                 </tbody>
@@ -227,6 +227,12 @@ $(function(){
 
     var total = 0;
 
+    $('input').keypress(function(e){
+        if(e.which == 13){
+            return false;
+        }
+    });
+
     $('table[name="order_table"]').on("change", '#itemNumber', paymentCalc);
     $('table[name="order_table"]').on("change", '#itemCost', paymentCalc);
     $('input[name="discount"]').on("change", paymentCalc);
@@ -246,8 +252,9 @@ $(function(){
         $('p[name="total-10"]').html(Math.round(0.1*sum));
         $('p[name="total-all"]').html(Math.round(1.1*sum));
         var discount = $('input[name="discount"]').val();
+        discount = 0;
         total = Math.round(1.1*sum)+discount*1
-        $('p[name="total-f"]').html(total);
+        $('p[name="total-f"]').val(total);
         $('#total_fee').val(total);
     }
 

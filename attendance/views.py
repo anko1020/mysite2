@@ -351,12 +351,13 @@ class CheckEditer(TemplateView):
             check_sheet_obj.staff.add(account)
             print(account)
 
-        check_sheet_obj.total_fee = request.POST.get('total_pay')
+        check_sheet_obj.total_fee = request.POST.get('total-f')
         check_sheet_obj.discount = request.POST.get('discount')
         check_sheet_obj.how_cash = request.POST.get('how_cash')
         check_sheet_obj.client_name = request.POST.get('client_name')
         check_sheet_obj.client_num = request.POST.get('client_num')
         check_sheet_obj.memo_str = request.POST.get('memo')
+
         if check_sheet_obj.end_overtime == "":
             check_sheet_obj.asign = True
         check_sheet_obj.save()
@@ -401,10 +402,14 @@ class CompCheckSheet(TemplateView):
 
     def post(self, request, pk):
 
+
         try:
             check_sheet_obj = get_object_or_404(CheckSheet, pk=pk)
         except:
             return HttpResponseRedirect(reverse("SelectSeat"))
+
+        if "cancel" in request.POST:
+            return HttpResponseRedirect(reverse("CheckSheet", kwargs={'pk':check_sheet_obj.pk}))
 
         god = get_object_or_404(CheckSheet, client_name="clientGOD")
         for seat in check_sheet_obj.seat_set.all():
@@ -418,7 +423,7 @@ class CompCheckSheet(TemplateView):
         check_sheet_obj.end_overtime = system.ConvertDatetimeToOvertime(now)
         check_sheet_obj.asign = False
         check_sheet_obj.save()
-        
+
         return HttpResponseRedirect(reverse("SelectSeat"))
 
 
