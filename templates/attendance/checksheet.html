@@ -35,31 +35,46 @@ checksheet
         <table class="table table-bordered table-sm align-middle" name="order_table">
             <thead>
               <tr>
-                <th scope="col">品名</th>
-                <th scope="col">数量</th>
-                <th scope="col">単価</th>
+                <th scope="col" style="width: 170px;">品名</th>
+                <th scope="col" style="width: 100px;">STAFF</th>
+                <th scope="col" style="width: 40px;">数量</th>
+                <th scope="col" style="width: 70px;">単価</th>
                 <th scope="col">金額</th>
               </tr>
             </thead>
-            <tbody id="order">
+            <tbody id="order" style="text-align: center;">
                 {% for item in CheckSheet.item_set.all %}
                     <tr id="item_field">
                         <td>
                             <div class="input-group mb-2" name="item_name">
-                                <input type="text" name="item_name" class="form-control" aria-label="Text input with dropdown button" value="{{item.item_name}}" style="width: 80px;">
+                                <input type="text" name="item_name" class="form-control" aria-label="Text input with dropdown button" value="{{item.item_name}}" style="width: 50px; text-align: center;">
                                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria_expanded="true"></button>
                                 <ul class="dropdown-menu">
                                     {% for item in Menu.item_set.all %}
-                                    <li data-num="{{item.item_num}}" data-cost="{{item.item_cost}}"><a class="dropdown-item">{{item}}</a></li>
+                                    <li class="order_items" data-num="{{item.item_num}}" data-cost="{{item.item_cost}}"><a class="dropdown-item">{{item}}</a></li>
                                     {% endfor %}
                                 </ul>
                             </div>
                         </td>
                         <td>
-                            <input type="number" name="item_num" id="itemNumber" class="form-control" value="{{item.item_num}}" style="width: 60px;"/>
+                            <div class="input-group mb-2">
+                                <input type="text" name="staff_name" class="form-control" aria-label="Text input with dropdown button" style="text-align: center;" value="{{item.staff}}" readonly>
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria_expanded="true"></button>
+                                <ul class="dropdown-menu">
+                                    <li class="d_staffs" data-name="-"><a class="dropdown-item">--</a></li>
+                                    {% for account in Staff %}
+                                    {% if account.user.username != "admin" %}
+                                    <li class="d_staffs" data-name="{{account}}"><a class="dropdown-item">{{account}}</a></li>
+                                    {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
                         </td>
                         <td>
-                            <input type="text" pattern="^[0-9]+$" name="item_cost" id="itemCost" class="form-control" value="{{item.item_cost}}" style="width: 80px;"/>
+                            <input type="number" name="item_num" id="itemNumber" class="form-control" value="{{item.item_num}}" style="width: 60px; text-align: center;"/>
+                        </td>
+                        <td>
+                            <input type="text" pattern="^[0-9]+$" name="item_cost" id="itemCost" class="form-control" value="{{item.item_cost}}" style="width: 70px; text-align: center;"/>
                         </td>
                         <td>
                             <p name="total">0</p>
@@ -252,9 +267,9 @@ $(function(){
         $('p[name="total-10"]').html(Math.round(0.1*sum));
         $('p[name="total-all"]').html(Math.round(1.1*sum));
         var discount = $('input[name="discount"]').val();
-        discount = 0;
-        total = Math.round(1.1*sum)+discount*1
-        $('p[name="total-f"]').val(total);
+        //discount = 0;
+        total = Math.round(1.1*sum)-discount*1;
+        $('input[name="total-f"]').val(total);
         $('#total_fee').val(total);
     }
 
@@ -286,11 +301,13 @@ $(function(){
     })
 
     $('table[name="order_table"]').on("click", 'li', function(){
-        //alert($(this).val());
-        $(this).parents('#item_field').find('#itemNumber').val($(this).data('num'));
-        $(this).parents('#item_field').find('#itemCost').val($(this).data('cost'));
+        //alert();
         $(this).parent().parent().find('input').val($(this).text());
-        paymentCalc();
+        if($(this).attr("class") == "order_items"){
+            $(this).parents('#item_field').find('#itemNumber').val($(this).data('num'));
+            $(this).parents('#item_field').find('#itemCost').val($(this).data('cost'));
+            paymentCalc();
+        }
     })
 
     $('div[name="staffs"]').on("click", 'li', function(){

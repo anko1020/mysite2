@@ -1,4 +1,5 @@
 from openpyxl import Workbook, load_workbook
+from django.shortcuts import get_object_or_404
 from .models import Account
 from django.utils import timezone
 import xlwings as xw
@@ -67,6 +68,9 @@ def WriteAttendance(account):
     #     end_str = str(t_end.hour+24)+":"+
     
     account.save()
+    
+    UpdateDaily(account.pk)
+
     wb.save(sheet_path)
     wb.close()
 
@@ -147,9 +151,8 @@ def WriteLeaving(account):
             ws["E1"] = username
             wb.save(sheet_path)
 
-        ws_daily['O'+str(12+user_number)] = account.end_overtime.split()[1]
-        ws_daily['N'+str(12+user_number)] = account.start_overtime.split()[1]
-        wb_daily.save(dailyReport_sheet)
+        UpdateDaily(account.pk)
+
         wb_daily.close()
 
 def ChangeSheetName(prev_name, name):
@@ -234,8 +237,6 @@ def AddSheet(user):
         ws["E1"] = user
         wb.save(sheet_path)
 
-        ws_daily["M"+str(count+12)] = user
-        wb_daily.save(dailyReport_sheet)
     except:
         print('Write excel error')
     
@@ -282,12 +283,63 @@ def ConvertDatetimeToOvertime(datetime):
     m_zero = ""
     if datetime.hour < 12:
         hour += 24
-    if datetime.hour < 10:
-        h_zero = "0"
     if datetime.minute < 10:
         m_zero = "0"
 
     return str(month)+"/"+str(day)+" "+str(h_zero)+str(hour)+":"+str(m_zero)+str(minute)
+
+
+is_update = False
+
+def UpdateDaily(pk):
+    now = timezone.localtime(timezone.now())
+
+    wb_daily = load_workbook(dailyReport_sheet)
+    ws_daily = wb_daily["Revised"]
+
+    staff = get_object_or_404(Account,pk=pk)
+
+    daily_day = datetime.strptime(str(ws_daily['B1'].value), '%Y/%m/%d')
+    print("str(ws_daily['B1'].value)")
+    print(str(ws_daily['B1'].value))
+
+    if daily_day.day != TodayBehind12(now).day:
+        wb_daily.remove(wb_daily['Revised'])
+        ws_daily = wb_daily.copy_worksheet(wb_daily["OriginRevised"])
+        ws_daily.title = "Revised"
+        ws_daily['B1'] = TodayBehind12(now).strftime("%Y/%m/%d")
+        wb_daily.save(dailyReport_sheet)
+
+    i = 13
+    name = ws_daily['M'+str(i)].value
+    while not name is None:
+        print("name")
+        print(name)
+        if str(name) == staff.user.username:
+            if staff.start_overtime != "0":
+                ws_daily['N'+str(i)] = staff.start_overtime.split()[1]
+            if staff.end_overtime != "0":
+                ws_daily['O'+str(i)] = staff.end_overtime.split()[1]
+            ws_daily['P'+str(i)] = staff.staff_drink
+            ws_daily['Q'+str(i)] = staff.staff_bottle
+            i = -1
+            break
+        if i > 30:
+            break
+        i += 1
+        name = ws_daily['M'+str(i)].value
+
+    if i != -1:
+        ws_daily['M'+str(i)] = staff.user.username
+        if staff.start_overtime != "0":
+            ws_daily['N'+str(i)] = staff.start_overtime.split()[1]
+        if staff.end_overtime != "0":
+            ws_daily['O'+str(i)] = staff.end_overtime.split()[1]
+        ws_daily['P'+str(i)] = staff.staff_drink
+        ws_daily['Q'+str(i)] = staff.staff_bottle
+                
+    wb_daily.save(dailyReport_sheet)
+    wb_daily.close()
 
 
 # def ExcelToPDF():

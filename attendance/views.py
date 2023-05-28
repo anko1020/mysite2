@@ -125,7 +125,17 @@ class Registration(TemplateView):
                 account.save()
 
                 now = timezone.now()
-                Account.objects.create(user=account,is_working=False,start_time=now,end_time=now)
+                Account.objects.create(
+                    user=account,
+                    is_working=False,
+                    start_time=now,
+                    end_time=now,
+                    start_overtime="0",
+                    end_overtime="0",
+                    is_sending=False,
+                    staff_drink=0,
+                    staff_bottle=0,
+                    )
 
                 system.AddSheet(account.username)
 
@@ -295,6 +305,7 @@ class SelectSeat(ListView):
             for i in range(3):
                 item_obj = Item.objects.create(
                     item_name = "",
+                    staff = "--",
                     item_num = 0,
                     item_cost = 0,
                     checkSheet = sheet,
@@ -322,10 +333,12 @@ class CheckEditer(TemplateView):
     def post(self, request, pk):
 
         item_name_list = request.POST.getlist('item_name')
+        drink_list = request.POST.getlist('staff_name')
         item_num_list = request.POST.getlist('item_num')
         item_cost_list = request.POST.getlist('item_cost')
         staff_list = request.POST.getlist('staff_account')
-        print("len(item_name_list)")
+        item_num = len(item_name_list)
+        print("")
         print(staff_list)
         try:
             check_sheet_obj = get_object_or_404(CheckSheet, pk=pk)
@@ -365,17 +378,22 @@ class CheckEditer(TemplateView):
         i = 0
 
         for item_obj in check_sheet_obj.item_set.all():
-            item_obj.item_name = item_name_list[i]
-            item_obj.item_num = item_num_list[i]
-            item_obj.item_cost = item_cost_list[i]
-            print(item_obj)
-            item_obj.save()
+            if item_num > i:
+                item_obj.item_name = item_name_list[i]
+                item_obj.staff = drink_list[i]
+                item_obj.item_num = item_num_list[i]
+                item_obj.item_cost = item_cost_list[i]
+                print(item_obj)
+                item_obj.save()
+            else:
+                item_obj.delete()
             i += 1
 
         if i < len(item_name_list):
             for j in range(i,len(item_name_list)):
                 new_item = Item.objects.create(
                     item_name = item_name_list[j],
+                    staff = drink_list[i],
                     item_num = item_num_list[j],
                     item_cost = item_cost_list[j],
                     checkSheet = check_sheet_obj,
@@ -402,7 +420,6 @@ class CompCheckSheet(TemplateView):
 
     def post(self, request, pk):
 
-
         try:
             check_sheet_obj = get_object_or_404(CheckSheet, pk=pk)
         except:
@@ -424,11 +441,23 @@ class CompCheckSheet(TemplateView):
         check_sheet_obj.asign = False
         check_sheet_obj.save()
 
+        
+        for item_obj in check_sheet_obj.item_set.all():
+            if item_obj.staff != "--":
+                user = get_object_or_404(User, username=item_obj.staff)
+                account = get_object_or_404(Account, user=user)
+                if item_obj.item_name == "キャストドリンク":
+                    account.staff_drink += int(item_obj.item_num)
+                else:
+                    account.staff_bottle += int(item_obj.item_cost)
+                account.save()
+                system.UpdateDaily(account.pk)
+
         return HttpResponseRedirect(reverse("SelectSeat"))
 
 
 def control(request):
     now = timezone.localtime(timezone.now())
-    
+    system.UpdateDaily(0)
     
     return render(request,"attendance/outxlsx.html")

@@ -11,20 +11,53 @@ select seat
 <form action="{% url 'SelectSeat' %}" method="post">
     {% csrf_token %}
     <div class="col position-relative" style="background-color: lavenderblush; height: 300px;">
+        
+        <div class="btn-group" role="group" style="position: absolute; left: 10px; top: 20px">
         {% for seat in object_list %}
-            <div style="position: absolute; left: {{seat.pos_x}}px; top: {{seat.pos_y}}px">
+        {% if seat.attr == "B" %}
             {% if not seat.is_use %}
-                <span>
-                    <input type="checkbox" class="btn-check" name="seat-p" value="{{seat.pk}}" id="seat{{seat}}" autocomplete="off">
-                    <label class="btn btn-primary p-2" for="seat{{seat}}" name="p_label">{{seat}}</label>
-                </span> 
-                {% else %}
+            <label class="btn btn-primary p-2" for="seat-{{seat}}" name="seat-{{seat}}">
+                <input type="checkbox" class="btn-check" name="seat-p" value="{{seat.pk}}" id="seat-{{seat}}" autocomplete="off">
+                {{seat}}
+            </label>
+            {% else %}
                 <button type="submit" class="btn btn-danger p-2" name="dager_button" value="{{seat.pk}}">{{seat}}</button>
             {% endif %}
-            </div>
+        {% endif %}
         {% endfor %}
+        </div>
+        <div class="btn-group" role="group" style="position: absolute; left: 10px; top: 180px">
+        {% for seat in object_list %}
+        {% if seat.attr == "A" %}
+            {% if not seat.is_use %}
+                
+                <label class="btn btn-primary p-2" for="seat-{{seat}}" name="p_label">
+                    <input type="checkbox" class="btn-check" name="seat-p" value="{{seat.pk}}" id="seat-{{seat}}" autocomplete="off">
+                    {{seat}}
+                </label>
+            
+            {% else %}
+                <button type="submit" class="btn btn-danger p-2" name="dager_button" value="{{seat.pk}}">{{seat}}</button>
+            {% endif %}
+        {% endif %}
+        {% endfor %}
+        </div>
+        <div class="btn-group-vertical" role="group" style="position: absolute; left: 380px; top: 20px">
+            {% for seat in object_list %}
+            {% if seat.attr == "Y" %}
+                {% if not seat.is_use %}
+                    <label class="btn btn-primary p-2" for="seat-{{seat}}" name="p_label">
+                        <input type="checkbox" class="btn-check" name="seat-p" value="{{seat.pk}}" id="seat-{{seat}}" autocomplete="off">
+                        {{seat}}
+                    </label>
+                {% else %}
+                    <button type="submit" class="btn btn-danger p-2" name="dager_button" value="{{seat.pk}}">{{seat}}</button>
+                {% endif %}
+            {% endif %}
+            {% endfor %}
+        </div>
+        <input type="submit" name="comp_btn" class="btn btn-outline-primary" style="position: absolute; right: 10px; bottom: 20px" value="アサイン">
     </div>
-    <input type="submit" name="comp_btn" class="btn btn-outline-primary" value="アサイン">
     <br>
     <h2>会計表</h2>
     <div class="asign_table">
@@ -91,49 +124,21 @@ select seat
     var is_primary;
     var is_danger;
     $(function(){
-        $('input[name="seat-p"]').click(function() {
-            is_primary = false;
-            $('input[name="seat-p"]').each(function(){
-                if($(this).prop('checked')){
-                    is_primary = true;
-                    //alert("dd");
-                    //alert($(this).parent().find('label').attr("class"));
-                    $(this).parent().find('label').css('background-color', 'limegreen');
-                }else{
-                    $(this).parent().find('label').css('background-color', 'rgb(13,110,253)');
-                }
-            })
-            if(is_primary && is_danger){
-                ($(this).prop('checked', false));
-                is_primary = false;
-                $('p[name="error1"]').remove();
-                $('div[name="container"]').append('<p name="error1" style="color:red">使用中の席と同時に選択することはできません');
+        $('input').click(function(){
+            //alert($(this).parents("label").attr("class"));
+            if($(this).prop('checked')){
+                //alert("dd");
+                //alert($(this).parent().find('label').attr("class"));
+                $(this).parents("label").css('background-color', 'limegreen');
             }else{
-                $('p[name="error1"]').remove();
+                $(this).parents("label").css('background-color', 'rgb(13,110,253)');
             }
-        });
-        $('input[name="seat-d"]').click(function() {
-            is_danger = false;
-            $('input[name="seat-d"]').each(function(){
-                if($(this).prop('checked')){
-                    is_danger = true;
-                }
-            })
-            if(is_danger && is_primary){
-                is_danger = false;
-                ($(this).prop('checked', false));
-                $('p[name="error1"]').remove();
-                $('div[name="container"]').append('<p name="error1" style="color:red">使用中の席と同時に選択することはできません');
-            }else{
-                $('p[name="error1"]').remove();
-            }
-        });
-        //$('tr[data-href]').addClass('clickable');
+            
+        })
         $('tr[data-href]').click(function(){
             //alert($(this).data("href"));
             location.href = $(this).data("href");
         })
-    
     });
 
 {% endblock script %}

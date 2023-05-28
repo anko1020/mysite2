@@ -15,8 +15,12 @@ class Account(models.Model):
 
     start_overtime = models.CharField(max_length=20, null=True)
     end_overtime = models.CharField(max_length=20, null=True)
-    
+
     is_sending = models.BooleanField(default=False)
+
+    staff_drink = models.IntegerField(default=0)
+    staff_bottle = models.IntegerField(default=0)
+
     def __str__(self):
         return self.user.username
 
@@ -53,6 +57,7 @@ class ItemMenu(models.Model):
 
 class Item(models.Model):
     item_name = models.CharField(max_length=20, null=True)
+    staff =  models.CharField(max_length=20, null=True)
     item_num = models.IntegerField()
     item_cost = models.IntegerField()
 
@@ -66,6 +71,8 @@ class Item(models.Model):
 class Seat(models.Model):
     Seat_ID = models.CharField(max_length=10, null=True)
     CheckSheet = models.ForeignKey(CheckSheet, on_delete=models.CASCADE)
+
+    attr = models.CharField(max_length=3, null=True)
     
     pos_x = models.IntegerField(default=0)
     pos_y = models.IntegerField(default=0)
