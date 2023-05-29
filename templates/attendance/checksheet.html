@@ -18,217 +18,223 @@ checksheet
     </header>
     <main>
         <div class="row">
-            <div class="col">
+            <div class="col-9">
                 <h4>{{CheckSheet.start_time|date:"Y年n月j日"}}</h4> 
             </div>
-            <div class="col">
+            <div class="col-3">
                 <div class="col">
                     <h6>来店 : {{CheckSheet.start_overtime}}</h6>
-                  
+                
                 </div>
                 <div class="col">
                     <h6>退店 : {{CheckSheet.end_overtime}}</h2>
                 </div>
             </div>
-        </div>  
-        <div style="margin: 20px 50;">
-        <table class="table table-bordered table-sm align-middle" name="order_table">
-            <thead>
-              <tr>
-                <th scope="col" style="width: 170px;">品名</th>
-                <th scope="col" style="width: 100px;">STAFF</th>
-                <th scope="col" style="width: 40px;">数量</th>
-                <th scope="col" style="width: 70px;">単価</th>
-                <th scope="col">金額</th>
-              </tr>
-            </thead>
-            <tbody id="order" style="text-align: center;">
-                {% for item in CheckSheet.item_set.all %}
-                    <tr id="item_field">
-                        <td>
-                            <div class="input-group mb-2" name="item_name">
-                                <input type="text" name="item_name" class="form-control" aria-label="Text input with dropdown button" value="{{item.item_name}}" style="width: 50px; text-align: center;">
-                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria_expanded="true"></button>
-                                <ul class="dropdown-menu">
-                                    {% for item in Menu.item_set.all %}
-                                    <li class="order_items" data-num="{{item.item_num}}" data-cost="{{item.item_cost}}"><a class="dropdown-item">{{item}}</a></li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="input-group mb-2">
-                                <input type="text" name="staff_name" class="form-control" aria-label="Text input with dropdown button" style="text-align: center;" value="{{item.staff}}" readonly>
-                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria_expanded="true"></button>
-                                <ul class="dropdown-menu">
-                                    <li class="d_staffs" data-name="-"><a class="dropdown-item">--</a></li>
-                                    {% for account in Staff %}
-                                    {% if account.user.username != "admin" %}
-                                    <li class="d_staffs" data-name="{{account}}"><a class="dropdown-item">{{account}}</a></li>
-                                    {% endif %}
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </td>
-                        <td>
-                            <input type="number" name="item_num" id="itemNumber" class="form-control" value="{{item.item_num}}" style="width: 60px; text-align: center;"/>
-                        </td>
-                        <td>
-                            <input type="text" pattern="^[0-9]+$" name="item_cost" id="itemCost" class="form-control" value="{{item.item_cost}}" style="width: 70px; text-align: center;"/>
-                        </td>
-                        <td>
-                            <p name="total">0</p>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
         </div>
-        <div class="section1 text-center">
-            <button type="button" class="btn btn-outline-primary rounded-circle p-0" name="orderAdd" style="width:2rem;height:2rem;"><h4>＋</h4></button>
-        </div>
+        <br>
         <div class="row">
-            <div class="col-7">
-                <label for="table-id">テーブル</label>
-                <h4 id="table-id">
-                {% for seat in CheckSheet.seat_set.all %}
-                    {{seat}},
-                {% endfor %}
-                </h4>
-                <br>
-                <div class="row">
-                    <div class="d-flex align-items-center">
-                        <input type="number" name="client_num" class="form-control" value="{{CheckSheet.client_num}}" style="width: 60px;">
-                        <h4>　名</h4>
-                    </div>
-                </div>
-                <br>
-                <div class="row" id="all_staff">
-                    <label for="dropdownMenuButton1">係</label><br>
-                    <div class="col-auto">
-                        <div class="row" name="staffs">
-                            <div class="col-auto" name="staff_select">
-                                <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    {{Staff.0}}
-                                </button>
-                                <input type="hidden" class="form-control" name="staff_account" value="{{Staff.0}}">
-                                   
-                                <ul class="dropdown-menu" name="staff" aria-labelledby="dropdownMenuButton1">
-                                {% for account in Staff %}
-                                {% if not account.user.username == "admin" %}
-                                    <li><a class="dropdown-item">{{account}}</a></li>
-                                {% endif %}
-                                {% endfor %}
-                                </ul>
-                            </div>
-                            {% for selectedStaff in CheckSheet.staff.all %}{% if selectedStaff != Staff.0 %}
-                            
-                            <div class="col-auto" name="staff_select">
-                                <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    {{selectedStaff}}
-                                </button>
-                                <input type="hidden" class="form-control" name="staff_account" value="{{Staff.0}}">
-                                   
-                                <ul class="dropdown-menu" name="staff" aria-labelledby="dropdownMenuButton1">
-                                {% for account in Staff %}
-                                {% if not account.user.username == "admin" %}
-                                    <li><a class="dropdown-item">{{account}}</a></li>
-                                {% endif %}
-                                {% endfor %}
-                                </ul>
-                            </div>
-                            {% endif %}{% endfor %}
+        <div class="col-md-9">
+            <div style="margin: 20px 50;">
+            <table class="table table-bordered table-sm align-middle" name="order_table">
+                <thead>
+                <tr>
+                    <th scope="col" style="width: 170px;">品名</th>
+                    <th scope="col" style="width: 100px;">STAFF</th>
+                    <th scope="col" style="width: 40px;">数量</th>
+                    <th scope="col" style="width: 70px;">単価</th>
+                    <th scope="col">金額</th>
+                </tr>
+                </thead>
+                <tbody id="order" style="text-align: center;">
+                    {% for item in CheckSheet.item_set.all %}
+                        <tr id="item_field">
+                            <td>
+                                <div class="input-group mb-2" name="item_name">
+                                    <input type="text" name="item_name" class="form-control" aria-label="Text input with dropdown button" value="{{item.item_name}}" style="width: 50px; text-align: center;">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria_expanded="true"></button>
+                                    <ul class="dropdown-menu">
+                                        {% for item in Menu.item_set.all %}
+                                        <li class="order_items" data-num="{{item.item_num}}" data-cost="{{item.item_cost}}"><a class="dropdown-item">{{item}}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="input-group mb-2">
+                                    <input type="text" name="staff_name" class="form-control" aria-label="Text input with dropdown button" style="text-align: center;" value="{{item.staff}}" readonly>
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria_expanded="true"></button>
+                                    <ul class="dropdown-menu">
+                                        <li class="d_staffs" data-name="-"><a class="dropdown-item">--</a></li>
+                                        {% for account in Staff %}
+                                        {% if account.user.username != "admin" %}
+                                        <li class="d_staffs" data-name="{{account}}"><a class="dropdown-item">{{account}}</a></li>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </td>
+                            <td>
+                                <input type="number" name="item_num" id="itemNumber" class="form-control" value="{{item.item_num}}" style="width: 60px; text-align: center;"/>
+                            </td>
+                            <td>
+                                <input type="text" pattern="^[0-9]+$" name="item_cost" id="itemCost" class="form-control" value="{{item.item_cost}}" style="width: 70px; text-align: center;"/>
+                            </td>
+                            <td>
+                                <p name="total">0</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            <div class="section1 text-center">
+                <button type="button" class="btn btn-outline-primary rounded-circle p-0" name="orderAdd" style="width:2rem;height:2rem;"><h4>＋</h4></button>
+            </div>
+            <div class="row">
+                <div class="col-7">
+                    <label for="table-id">テーブル</label>
+                    <h4 id="table-id">
+                    {% for seat in CheckSheet.seat_set.all %}
+                        {{seat}},
+                    {% endfor %}
+                    </h4>
+                    <br>
+                    <div class="row">
+                        <div class="d-flex align-items-center">
+                            <input type="number" name="client_num" class="form-control" value="{{CheckSheet.client_num}}" style="width: 60px;">
+                            <h4>　名</h4>
                         </div>
                     </div>
-                    <div class="col-2">
-                        <button type="button" class="btn btn-otline-info rounded-circle p-1" name="staffAdd" style="width:2rem;height:2rem;"><h4>＋</h4></button>
-                    </div>
-                    <div class="col-2">
-                        <button type="button" class="btn btn-otline-info rounded-circle p-1" name="staffDelete" style="width:2rem;height:2rem;"><h4>－</h4></button>
+                    <br>
+                    <div class="row" id="all_staff">
+                        <label for="dropdownMenuButton1">係</label><br>
+                        <div class="col-auto">
+                            <div class="row" name="staffs">
+                                <div class="col-auto" name="staff_select">
+                                    <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                        {{Staff.0}}
+                                    </button>
+                                    <input type="hidden" class="form-control" name="staff_account" value="{{Staff.0}}">
+                                    
+                                    <ul class="dropdown-menu" name="staff" aria-labelledby="dropdownMenuButton1">
+                                    {% for account in Staff %}
+                                    {% if not account.user.username == "admin" %}
+                                        <li><a class="dropdown-item">{{account}}</a></li>
+                                    {% endif %}
+                                    {% endfor %}
+                                    </ul>
+                                </div>
+                                {% for selectedStaff in CheckSheet.staff.all %}{% if selectedStaff != Staff.0 %}
+                                
+                                <div class="col-auto" name="staff_select">
+                                    <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                        {{selectedStaff}}
+                                    </button>
+                                    <input type="hidden" class="form-control" name="staff_account" value="{{Staff.0}}">
+                                    
+                                    <ul class="dropdown-menu" name="staff" aria-labelledby="dropdownMenuButton1">
+                                    {% for account in Staff %}
+                                    {% if not account.user.username == "admin" %}
+                                        <li><a class="dropdown-item">{{account}}</a></li>
+                                    {% endif %}
+                                    {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}{% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <button type="button" class="btn btn-otline-info rounded-circle p-1" name="staffAdd" style="width:2rem;height:2rem;"><h4>＋</h4></button>
+                        </div>
+                        <div class="col-2">
+                            <button type="button" class="btn btn-otline-info rounded-circle p-1" name="staffDelete" style="width:2rem;height:2rem;"><h4>－</h4></button>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-4">
-                
-                <table class="table table-bordered table-sm">
-                    <tbody>
-                        <tr>
-                            <th scope="row">小計</th>
-                            <td>
-                                <p class="text-right" name="total-s-all">0</p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">サービス料</th>
-                            <td>
-                                <p name="total-20">0</p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">消費税</th>
-                            <td>                                
-                                <p name="total-10">0</p>
-                            </td>
+                <div class="col-4">
+                    
+                    <table class="table table-bordered table-sm">
+                        <tbody>
+                            <tr>
+                                <th scope="row">小計</th>
+                                <td>
+                                    <p class="text-right" name="total-s-all">0</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">サービス料</th>
+                                <td>
+                                    <p name="total-20">0</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">消費税</th>
+                                <td>                                
+                                    <p name="total-10">0</p>
+                                </td>
 
-                        </tr>
-                        <tr>
-                            <th scope="row">税込合計</th>
-                            <td>
-                                <p name="total-all">0</p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">割引</th>
-                            <td>
-                                <input type="text" pattern="[+-]?\d+" class="form-control" name="discount" value="{{CheckSheet.discount}}" style="width: 80px;"/>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                            </tr>
+                            <tr>
+                                <th scope="row">税込合計</th>
+                                <td>
+                                    <p name="total-all">0</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">割引</th>
+                                <td>
+                                    <input type="text" pattern="[+-]?\d+" class="form-control" name="discount" value="{{CheckSheet.discount}}" style="width: 80px;"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
         <div class="d-flex align-items-center">
             <input type="text" name="client_name" class="form-control" value="{{CheckSheet}}" style="width: 200px;">
             <h4>様</h4>
         </div>
-        <br>
-        <div>
-            <table class="table table-bordered table-sm">
-                <tbody>
-                    <tr>
-                        <th scope="row">税込合計金額</th>
-                        <td>
-                            <input class="form-control" name="total-f" value="{{CheckSheet.total_fee}}">
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="dropdown" id="cash_how">
-                <h5>お支払い方法</h5>
-                <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                {{CheckSheet.how_cash}}
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <li><a class="dropdown-item">現金</a></li>
-                    <li><a class="dropdown-item">クレジットカード</a></li>
-                </ul>
+        </div>
+        <div class="col-md-3">
+            <div>
+                <table class="table table-bordered table-sm">
+                    <tbody>
+                        <tr>
+                            <th scope="row">税込合計金額</th>
+                            <td>
+                                <input class="form-control" name="total-f" value="{{CheckSheet.total_fee}}">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="dropdown" id="cash_how">
+                    <h5>お支払い方法</h5>
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                    {{CheckSheet.how_cash}}
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <li><a class="dropdown-item">現金</a></li>
+                        <li><a class="dropdown-item">クレジットカード</a></li>
+                    </ul>
+                </div>
             </div>
+            <br>
+            <div class="row">
+                <div class="d-grid gap-1 mx-auto" id="submit_button">
+                    <input type="submit" class="btn btn-outline-primary" name="save" value="保存">
+                    {% if CheckSheet.asign %}
+                        <input type="submit" class="btn btn-outline-success" name="payment" value="会計">
+                    {% endif %}
+                </div> 
+            </div>
+            <br>
+            <div class="form-floating">
+                <textarea class="form-control" name="memo" id="floatingTextarea" style="height: 200px">{{CheckSheet.memo_str}}</textarea>
+                <label for="floatingTextarea">Memo</label>
+            </div>
+
         </div>
-        <br>
-        <div class="row">
-            <div class="d-grid gap-1 mx-auto" id="submit_button">
-                <input type="submit" class="btn btn-outline-primary" name="save" value="保存">
-                {% if CheckSheet.asign %}
-                    <input type="submit" class="btn btn-outline-success" name="payment" value="会計">
-                {% endif %}
-            </div> 
-        </div>
-        <br>
-        <div class="form-floating">
-            <textarea class="form-control" name="memo" id="floatingTextarea" style="height: 200px">{{CheckSheet.memo_str}}</textarea>
-            <label for="floatingTextarea">Memo</label>
-        </div>
-        <br>
+    </div>
     </main>
     </form>
 </div>
