@@ -1,12 +1,12 @@
 {% extends "attendance/base.html" %}
 {% block content %}
 
-{% csrf_token %}
 <h1>退勤管理Form</h1>
 
+    <form>{% csrf_token %}
 <div>
     <p align="center">ログイン中：{{user}}さん</p>
-    <form>
+    
     {% if is_working %}
         <p>{{time_start}}に出勤しました．<br>今日も一日頑張りましょう．</p>
     {% else %}
@@ -16,8 +16,8 @@
     {% endif %}
     <button class = "bbutton" onclick="location.href='{% url 'Login' %}'">確認</button>
  
-    </form>
 </div>
+    </form>
 
 
 {% endblock %}

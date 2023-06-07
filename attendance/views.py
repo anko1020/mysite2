@@ -19,7 +19,7 @@ from . import system
 import os
 from .forms import AccountForm
 from datetime import datetime, timedelta
-from .models import Account, Seat, CheckSheet, Item, ItemMenu
+from .models import Account, Seat, CheckSheet, Item, ItemMenu, SheetAccountRelation, SheetStaffRelation
 
 def Login(request):
 
@@ -54,21 +54,40 @@ def Logout(request):
 @login_required
 def Result(request):
     account = get_object_or_404(Account, user=request.user)
-    account.is_working = not account.is_working
+
     now = timezone.localtime(timezone.now())
+    now_12b = system.TodayBehind12(now)
+    working_time = now-now
+    
+    account = system.UpdateAccountDrink(account.pk,now_12b)
+    account = system.UpdateAccountBack(account.pk,now_12b)
+    account.is_working = not account.is_working
+    
     if account.is_working:
-        account.start_time = now
-        working_time = now-now
-        system.WriteAttendance(account)
-    else:
+        account.start_time = system.AttendanceTimeCalc(now)
+        account.start_overtime = system.ConvertDatetimeToOvertime(account.start_time)
         account.end_time = now
-        working_time =  now - account.start_time
-        system.WriteLeaving(account)
+        account.end_overtime = ""
+        account.is_sending = False
+        account.debt = 0
+        #system.WriteAttendance(account)
+    else:
+        if now > account.start_time:
+            account.end_time = system.LeavingTimeCalc(now)
+            account.end_overtime = system.ConvertDatetimeToOvertime(account.end_time)
+            working_time = account.end_time - account.start_time
+        else:
+            account.end_time = account.start_time
+            account.end_overtime = account.start_overtime
+        #system.WriteLeaving(account)
     
     account.save()
     logout(request)
 
-    params = {
+    system.UpadateAttendanceSheet(account.pk,now_12b)
+    system.UpdateDaily(now_12b)
+
+    params = {#accountでまとめれるね
         "user"          :account.user,
         "is_working"    :account.is_working,
         "time_start"    :account.start_overtime,
@@ -82,8 +101,6 @@ class AdminFrom(ListView):
     model = Account
     template_name = "attendance/admin_form.html"
     def get(self, request):
-        if not request.user.is_superuser:
-            return HttpResponseRedirect(reverse('Login'))
         return super().get(request)
 
     def post(self, request):
@@ -196,6 +213,7 @@ def DownloadExcel(request,pk):
     return response
 
 def AccountEditer(request, pk):
+    now = timezone.localtime(timezone.now())
     if request.method == 'POST':
         account = get_object_or_404(Account,pk=pk)
         prev_name = account.user.username
@@ -205,18 +223,21 @@ def AccountEditer(request, pk):
         user.username = request.POST.get('username')
         password = request.POST.get('password')
         if request.POST.get('start_t') != None:
-            account.start_time = system.ConvertOvertimeToDatetime(request.POST.get('start_t'))
-        if request.POST.get('end_t') != None:
-            account.end_time = system.ConvertOvertimeToDatetime(request.POST.get('end_t'))
+            account.start_overtime = request.POST.get('start_t')
+            account.start_time = system.ConvertOvertimeToDatetime(account.start_overtime)
+        if request.POST.get('end_t') != None:            
+            account.start_overtime = request.POST.get('end_t')
+            account.end_time = system.ConvertOvertimeToDatetime(account.start_overtime)
+        account.debt = request.POST.get('debt')
         account.is_sending = request.POST.get('is_send') == "on"
         
         if prev_name != account.user.username:
             system.ChangeSheetName(prev_name, account.user.username)
-        system.WriteAttendance(account)
-        system.WriteLeaving(account)
-
         user.save()
         account.save()
+
+        system.UpadateAttendanceSheet(account.pk,system.TodayBehind12(account.start_time))
+        system.UpdateDaily(system.TodayBehind12(now))
 
         print(request.POST.get('start_t'))
         return HttpResponseRedirect(reverse("AdminForm"))
@@ -296,6 +317,8 @@ class SelectSeat(ListView):
                 end_overtime    =   "",
                 memo_str        =   "",
             )
+            staff0 = Account.objects.all()[0]
+            SheetAccountRelation.objects.create(checksheet=sheet,account=staff0,attr="B")
             for seat in seat_list:
                 seat.CheckSheet = sheet
                 seat.is_use = True
@@ -323,22 +346,26 @@ class SelectSeat(ListView):
 class CheckEditer(TemplateView):
 
     def get(self, request, pk):
+        sheet = get_object_or_404(CheckSheet, pk=pk)
         context = {
             "Staff": Account.objects.all(),
+            "Relations": sheet.sheetaccountrelation_set.all(),
             "CheckSheet": get_object_or_404(CheckSheet, pk=pk),
             "Menu": get_object_or_404(ItemMenu, menu="Default"),
             }
         return render(request,"attendance/checksheet.html", context)
 
     def post(self, request, pk):
+        now = timezone.localtime(timezone.now())
 
         item_name_list = request.POST.getlist('item_name')
         drink_list = request.POST.getlist('staff_name')
         item_num_list = request.POST.getlist('item_num')
         item_cost_list = request.POST.getlist('item_cost')
-        staff_list = request.POST.getlist('staff_account')
+        staff_list = request.POST.getlist('selected_staff')
+        staff_attr = request.POST.getlist('staff_attr')
         item_num = len(item_name_list)
-        print("")
+        print("staff")
         print(staff_list)
         try:
             check_sheet_obj = get_object_or_404(CheckSheet, pk=pk)
@@ -357,16 +384,59 @@ class CheckEditer(TemplateView):
             return HttpResponseRedirect(reverse("SelectSeat"))
         
         print(request.POST.get('total_pay'))
+        i = 0
 
-        for staff in staff_list:
-            user = get_object_or_404(User, username=staff)
+        for _staff in staff_list:
+            user = get_object_or_404(User, username=_staff)
             account = get_object_or_404(Account, user=user)
-            check_sheet_obj.staff.add(account)
-            print(account)
+            
+            relation = check_sheet_obj.sheetaccountrelation_set.filter(account=account)
+            print(relation)
+            if relation.exists():
+                sheet_account = SheetAccountRelation.objects.get(account=account,checksheet=check_sheet_obj)             
+                sheet_account.attr = staff_attr[i]
+                time = check_sheet_obj.end_time-check_sheet_obj.start_time
+                sheet_account.back = system.BackCalc(sheet_account.attr,check_sheet_obj.client_num,int(time.total_seconds()/3600))
+                sheet_account.save()
+                print("sheet_account.back")
+                print(sheet_account.back)
+            else:
+                SheetAccountRelation.objects.create(checksheet=check_sheet_obj,account=account,attr=staff_attr[i],back=0)
+            
+            account = system.UpdateAccountBack(account.pk,system.TodayBehind12(now))
+            system.UpadateAttendanceSheet(account.pk,system.TodayBehind12(now))
+            i += 1
+        i = 0
+
+
+        print(check_sheet_obj.staff.all())
+
+        for selected_staff in check_sheet_obj.staff.all():
+            for _staff in staff_list:
+                if selected_staff.user.username == _staff:
+                    i = 1
+                    break
+            if i == 0:
+                print("remove")
+                user = get_object_or_404(User, username=_staff)
+                account = get_object_or_404(Account, user=user)
+                relation = SheetAccountRelation.objects.get(account=account,checksheet=check_sheet_obj)
+                relation.delete()
+            i = 0
+            
+        print(check_sheet_obj.sheetaccountrelation_set.all().values_list('account', 'checksheet', 'attr'))
 
         check_sheet_obj.total_fee = request.POST.get('total-f')
         check_sheet_obj.discount = request.POST.get('discount')
-        check_sheet_obj.how_cash = request.POST.get('how_cash')
+        check_sheet_obj.start_overtime = request.POST.get('start_time')
+        check_sheet_obj.end_overtime = request.POST.get('end_time')
+        check_sheet_obj.start_time = system.ConvertOvertimeToDatetime(check_sheet_obj.start_overtime)
+        if check_sheet_obj.end_overtime != "":
+            check_sheet_obj.end_time = system.ConvertOvertimeToDatetime(check_sheet_obj.end_overtime)
+        if request.POST.get('how_cash') == "現金":
+            check_sheet_obj.how_cash = "現金"
+        else:
+            check_sheet_obj.how_cash = "カード"
         check_sheet_obj.client_name = request.POST.get('client_name')
         check_sheet_obj.client_num = request.POST.get('client_num')
         check_sheet_obj.memo_str = request.POST.get('memo')
@@ -400,12 +470,41 @@ class CheckEditer(TemplateView):
                     Menu = get_object_or_404(ItemMenu, menu="Manual"),
                 )
                 print(j)
-            
+                
+        for item_obj in check_sheet_obj.item_set.all():
+            if item_obj.staff != "--":
+                user = get_object_or_404(User, username=item_obj.staff)
+                account = get_object_or_404(Account, user=user)
+                relation = check_sheet_obj.sheetstaffrelation_set.filter(account=account)
+                print(relation)
+                if relation.exists():
+                    sheet_account = SheetStaffRelation.objects.get(account=account,checksheet=check_sheet_obj)             
+                    
+                    if item_obj.item_name == "キャストドリンク":
+                        sheet_account.drink = int(item_obj.item_num)
+                    else:
+                        sheet_account.bottle = int(item_obj.item_cost)*int(item_obj.item_num)
+                    sheet_account.save()
+                    print("sheet_account.drink")
+                    print(sheet_account.drink)
+                else:
+                    SheetStaffRelation.objects.create(checksheet=check_sheet_obj,account=account,drink=int(item_obj.item_num),bottle=int(item_obj.item_cost))
+
+                account = system.UpdateAccountDrink(account.pk,system.TodayBehind12(now))
+                system.UpadateAttendanceSheet(account.pk,system.TodayBehind12(now))
+
+                print("asada",check_sheet_obj.start_time)
+                #system.UpadateAttendanceSheet(account.pk,system.TodayBehind12(check_sheet_obj.start_time))
+                account.save()
 
         if "payment" in request.POST:
+            if check_sheet_obj.end_overtime == "":
+                check_sheet_obj.end_overtime = system.ConvertDatetimeToOvertime(now)
+                check_sheet_obj.save()
             return HttpResponseRedirect(reverse("CompSheet", kwargs={'pk':check_sheet_obj.pk}))
-          
-
+        
+        if not check_sheet_obj.asign:
+            system.UpdateDaily(system.TodayBehind12(now))
 
         print(check_sheet_obj)
         return HttpResponseRedirect(reverse("SelectSeat"))
@@ -419,6 +518,7 @@ class CompCheckSheet(TemplateView):
         return render(request,"attendance/comp_checksheet.html", context)
 
     def post(self, request, pk):
+        now = timezone.localtime(timezone.now())
 
         try:
             check_sheet_obj = get_object_or_404(CheckSheet, pk=pk)
@@ -426,6 +526,7 @@ class CompCheckSheet(TemplateView):
             return HttpResponseRedirect(reverse("SelectSeat"))
 
         if "cancel" in request.POST:
+            check_sheet_obj.end_overtime == ""
             return HttpResponseRedirect(reverse("CheckSheet", kwargs={'pk':check_sheet_obj.pk}))
 
         god = get_object_or_404(CheckSheet, client_name="clientGOD")
@@ -435,29 +536,68 @@ class CompCheckSheet(TemplateView):
             seat.save()
 
         print(check_sheet_obj)
-        now = timezone.localtime(timezone.now())
-        check_sheet_obj.end_time = now
-        check_sheet_obj.end_overtime = system.ConvertDatetimeToOvertime(now)
+        check_sheet_obj.end_time = system.ConvertOvertimeToDatetime(check_sheet_obj.end_overtime)
         check_sheet_obj.asign = False
         check_sheet_obj.save()
 
-        
-        for item_obj in check_sheet_obj.item_set.all():
-            if item_obj.staff != "--":
-                user = get_object_or_404(User, username=item_obj.staff)
-                account = get_object_or_404(Account, user=user)
-                if item_obj.item_name == "キャストドリンク":
-                    account.staff_drink += int(item_obj.item_num)
-                else:
-                    account.staff_bottle += int(item_obj.item_cost)
-                account.save()
-                system.UpdateDaily(account.pk)
+        system.UpdateDaily(system.TodayBehind12(now))
 
         return HttpResponseRedirect(reverse("SelectSeat"))
 
+def DailyEditer(request):
+    now = timezone.localtime(timezone.now())
+    if request.method == 'POST':
+        if "cancel" in request.POST:            
+            return HttpResponseRedirect(reverse("SelectSeat"))
+
+        dailyReport_sheet = BASE_DIR/'excel_sheets/QB Daily Report.xlsx'
+        wb_daily = load_workbook(dailyReport_sheet)
+        ws_daily = wb_daily["Revised"]
+        print(type(request.POST.get('envelop')))
+        
+        ws_daily["D4"] = int(request.POST.get('envelop'))
+        ws_daily["F7"] = int(request.POST.get('buyout'))
+        ws_daily["H7"] = int(request.POST.get('receipt'))
+        ws_daily["B9"] = int(request.POST.get('collect'))
+        ws_daily["D9"] = int(request.POST.get('bodyin'))
+        ws_daily["F9"] = int(request.POST.get('fare'))
+        ws_daily["H9"] = int(request.POST.get('excess'))
+        
+        wb_daily.save(dailyReport_sheet)
+        wb_daily.close()
+
+        #print(request.POST.get('start_t'))
+        return HttpResponseRedirect(reverse("SelectSeat"))
+        
+    else:
+        dailyReport_sheet = BASE_DIR/'excel_sheets/QB Daily Report.xlsx'
+        wb_daily = load_workbook(dailyReport_sheet, data_only=True)
+        ws_daily = wb_daily["Revised"]
+        
+        total = 0
+        for sheet in CheckSheet.objects.all():
+            end = timezone.localtime(sheet.end_time)
+            if system.TodayBehind12(end).day == system.TodayBehind12(now).day:
+                total += sheet.total_fee
+        context = {
+            "total" : total,
+            "envelop" : ws_daily["D4"].value,
+            "buyout" : ws_daily["F7"].value,
+            "receipt" : ws_daily["H7"].value,
+            "collect" : ws_daily["B9"].value,
+            "bodyin" : ws_daily["D9"].value,
+            "fare" : ws_daily["F9"].value,
+            "excess" : ws_daily["H9"].value,
+        }
+        wb_daily.close()
+        return render(request,"attendance/daily_edit.html",context)
+    
+    
 
 def control(request):
     now = timezone.localtime(timezone.now())
-    system.UpdateDaily(0)
+    date = system.UpdateDaily(now)
+    print(date)
+    #system.UpdateDaily(0)
     
     return render(request,"attendance/outxlsx.html")

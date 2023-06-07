@@ -1,8 +1,7 @@
 from openpyxl import Workbook, load_workbook
 from django.shortcuts import get_object_or_404
-from .models import Account
+from .models import Account, CheckSheet
 from django.utils import timezone
-import xlwings as xw
 from mysite2.settings import BASE_DIR
 from datetime import datetime, timedelta, date
 import calendar
@@ -13,66 +12,24 @@ dailyReport_sheet = BASE_DIR/'excel_sheets/QB Daily Report.xlsx'
 salesReport_sheet = 'C:/Users/anko1/Documents/web_django/Sales Report QB 2023.xlsx'
 staff_sheet = BASE_DIR/'excel_sheets/staff.xlsx'
 
-def WriteAttendance(account):
+def AttendanceTimeCalc(time):
+    if(time.minute >= 1 and time.minute <= 30):
+        time = time.replace(minute=30)
+    elif(time.minute >= 31 and time.minute <= 59):
+        time = time.replace(hour=time.hour+1, minute=00)
+    
+    return time
 
-    now = timezone.localtime(timezone.now())
-    username = account.user.username
-    excel_name = '出退勤表　'+str(TodayBehind12(now).month)+'月.xlsx'
-    sheet_path = wageTime_dir/excel_name
-
-    wb = load_workbook(sheet_path)
-
-    maching_flg = False
-    for title in wb.sheetnames:
-        if title == username:
-            maching_flg = True
-            break
-
-    if maching_flg:
-        ws = wb[username]
+def LeavingTimeCalc(time):
+    if(time.minute >= 16 and time.minute <= 45):
+        time = time.replace(minute=30)
     else:
-        ws = wb.copy_worksheet(wb["ひな形"])
-        ws.freeze_panes = 'A3'
-        ws.title = username
-        ws["E1"] = username
-        wb.save(sheet_path)
+        time = time.replace(minute=0)
+        if(time.minute >= 46):
+            time = time.replace(hour=time.hour+1)
 
-    t_start = account.start_time
+    return time
 
-    account.start_overtime = str(TodayBehind12(now).month)+"/"+str(TodayBehind12(now).day)+" "
-    
-    is_over = 0
-    if t_start.hour < 12:
-        is_over = 24
-
-    if(t_start.minute >= 1 and t_start.minute <= 30):
-        account.start_overtime += str(t_start.hour+is_over)+":30"
-        #t_start = t_start.replace(minute=30)
-    elif(t_start.minute >= 31 and t_start.minute <= 59):
-        account.start_overtime += str(t_start.hour+is_over+1)+":00"
-        #t_start = t_start.replace(hour=t_start.hour+1, minute=00) 
-        #pd_time = pd.DataFrame({'time':[t_start,t_end]})
-    elif(t_start.minute == 00):
-        account.start_overtime += str(t_start.hour+is_over)+":00"
-
-    ws.cell(row=t_start.day+2, column=4, value=account.start_overtime.split()[1])
-
-    print("attendance_sheet_print:")
-    print(account.start_overtime)
-    # start_str = t_start.strftime("%H:%M")
-    # end_str = ""
-
-    # if(t_start.day == t_end.day):
-    #     end_str = t_end.strftime("%H:%M")
-    # else:
-    #     end_str = str(t_end.hour+24)+":"+
-    
-    account.save()
-    
-    UpdateDaily(account.pk)
-
-    wb.save(sheet_path)
-    wb.close()
 
 def WriteLeaving(account):
 
@@ -116,6 +73,11 @@ def WriteLeaving(account):
     if(int(((t_end-t_start).total_seconds())/60) < 30):
         account.end_overtime = account.start_overtime
     ws.cell(row=t_start.day+2, column=5, value=account.end_overtime.split()[1])
+
+    send = ""
+    if account.is_sending:
+        send = "✔"
+    ws.cell(row=TodayBehind12(t_start).day+2, column=12, value=send)
     
     print("leaving_sheet_print:")
     print(account.end_overtime)
@@ -151,7 +113,7 @@ def WriteLeaving(account):
             ws["E1"] = username
             wb.save(sheet_path)
 
-        UpdateDaily(account.pk)
+        UpdateDailyStaff(account.pk)
 
         wb_daily.close()
 
@@ -241,6 +203,7 @@ def AddSheet(user):
         print('Write excel error')
     
 def DeleteSheet(user):
+    now = timezone.localtime(timezone.now())
     excel_name = '出退勤表　'+str(TodayBehind12(now).month)+'月.xlsx'
     sheet_path = wageTime_dir/excel_name
     wb = load_workbook(sheet_path)
@@ -291,55 +254,163 @@ def ConvertDatetimeToOvertime(datetime):
 
 is_update = False
 
-def UpdateDaily(pk):
+
+def UpdateAccountDrink(pk,date):    
+    staff = get_object_or_404(Account,pk=pk)
+    staff.staff_drink = 0
+    staff.staff_bottle = 0
+    staff.save()
+    for drink_realtion in staff.sheetstaffrelation_set.all():
+        start = timezone.localtime(drink_realtion.checksheet.start_time)
+        if TodayBehind12(start).day == date.day:
+            staff.staff_drink += drink_realtion.drink
+            staff.staff_bottle += drink_realtion.bottle
+            staff.save()
+    return staff
+            
+
+def UpdateAccountBack(pk,date):
+    staff = get_object_or_404(Account,pk=pk)
+    staff.back = 0
+    staff.save()
+    for back_realtion in staff.sheetaccountrelation_set.all():
+        start = timezone.localtime(back_realtion.checksheet.start_time)
+        if TodayBehind12(start).day == date.day:
+            staff.back += back_realtion.back
+            staff.save()
+    return staff
+
+def BackCalc(_type,client_num,time):
+    back = 0
+    match _type:
+        case "B":
+            back = 300*client_num*time
+        case "J":
+            print("J")
+        case "D":
+            back = 3000
+        case "M":
+            back = (500+300*(time-1)*client_num)
+    return back
+
+def UpdateDaily(date):
     now = timezone.localtime(timezone.now())
 
-    wb_daily = load_workbook(dailyReport_sheet)
-    ws_daily = wb_daily["Revised"]
+    wb = load_workbook(dailyReport_sheet)
+    ws = MakeNewDailySheet(wb,dailyReport_sheet,date)
+    ws = UpdateDeilyStaff(wb,dailyReport_sheet,date)
+    ws = UpdateDilyCheckSheet(wb,dailyReport_sheet,date)
 
-    staff = get_object_or_404(Account,pk=pk)
+    wb.save(dailyReport_sheet)
+    wb.close()
 
-    daily_day = datetime.strptime(str(ws_daily['B1'].value), '%Y/%m/%d')
-    print("str(ws_daily['B1'].value)")
-    print(str(ws_daily['B1'].value))
+    print("attendance_staff")
+    print(date.strftime("%m/%d"))
 
-    if daily_day.day != TodayBehind12(now).day:
-        wb_daily.remove(wb_daily['Revised'])
-        ws_daily = wb_daily.copy_worksheet(wb_daily["OriginRevised"])
-        ws_daily.title = "Revised"
-        ws_daily['B1'] = TodayBehind12(now).strftime("%Y/%m/%d")
-        wb_daily.save(dailyReport_sheet)
+def MakeNewDailySheet(wb,path,date):
+    ws = wb["Revised"]
+    daily_day = datetime.strptime(str(ws['B1'].value), '%Y/%m/%d')
+    if daily_day.day != TodayBehind12(date).day:
+        wb.remove(wb['Revised'])
+        ws = wb.copy_worksheet(wb["OriginRevised"])
+        ws.title = "Revised"
+        ws['B1'] = TodayBehind12(date).strftime("%Y/%m/%d")
+        wb.save(path)
+    return ws
 
+def UpdateDeilyStaff(wb,path,date):
     i = 13
-    name = ws_daily['M'+str(i)].value
-    while not name is None:
-        print("name")
-        print(name)
-        if str(name) == staff.user.username:
-            if staff.start_overtime != "0":
-                ws_daily['N'+str(i)] = staff.start_overtime.split()[1]
-            if staff.end_overtime != "0":
-                ws_daily['O'+str(i)] = staff.end_overtime.split()[1]
-            ws_daily['P'+str(i)] = staff.staff_drink
-            ws_daily['Q'+str(i)] = staff.staff_bottle
-            i = -1
-            break
-        if i > 30:
-            break
-        i += 1
-        name = ws_daily['M'+str(i)].value
+    j = 5
+    ws = wb["Revised"]
+    for staff in Account.objects.all():
+        start = timezone.localtime(staff.start_time)
+        print(TodayBehind12(start).day, date.day)
+        if TodayBehind12(start).day == date.day:
+            ws['M'+str(i)] = staff.user.username
+            ws['N'+str(i)] = staff.start_overtime.split()[1]
+            ws['O'+str(i)] = staff.end_overtime.split()[1]
+            ws['P'+str(i)] = staff.staff_drink
+            ws['Q'+str(i)] = staff.staff_bottle
+            ws['R'+str(i)] = staff.debt
+            ws['S'+str(i)] = staff.back
+            if staff.is_sending:
+                ws['J'+str(j)] = staff.user.username
+                j += 1
+            i += 1
+    wb.save(path)
+    return ws
 
-    if i != -1:
-        ws_daily['M'+str(i)] = staff.user.username
-        if staff.start_overtime != "0":
-            ws_daily['N'+str(i)] = staff.start_overtime.split()[1]
-        if staff.end_overtime != "0":
-            ws_daily['O'+str(i)] = staff.end_overtime.split()[1]
-        ws_daily['P'+str(i)] = staff.staff_drink
-        ws_daily['Q'+str(i)] = staff.staff_bottle
-                
-    wb_daily.save(dailyReport_sheet)
-    wb_daily.close()
+def UpdateDilyCheckSheet(wb,path,date):
+    i = 0
+    j = 0
+    ws = wb["Revised"]
+    for sheet in CheckSheet.objects.all():
+        end = timezone.localtime(sheet.end_time)
+        if TodayBehind12(end).day == date.day:
+            row = 13+10*(i//5)
+            col = 2+2*(i%5)
+            ws.cell(row,col,sheet.client_name)
+            ws.cell(row,col+1,sheet.client_num)
+            ws.cell(row+2,col,sheet.total_fee)
+            ws.cell(row+2,col+1,sheet.how_cash[0])
+            j = 0
+            for staff_relation in sheet.sheetaccountrelation_set.all():
+                ws.cell(row+4+j,col,staff_relation.account.user.username)
+                ws.cell(row+4+j,col+1,staff_relation.attr)
+                j += 1
+            i += 1
+    wb.save(path)
+    return ws
+
+
+def UpadateAttendanceSheet(pk, date):
+    now = timezone.localtime(timezone.now())
+    staff = get_object_or_404(Account,pk=pk)
+    username = staff.user.username
+    excel_name = '出退勤表　'+str(TodayBehind12(now).month)+'月.xlsx'
+    sheet_path = wageTime_dir/excel_name
+
+    wb = load_workbook(sheet_path)
+    ws = MakeNewStaffSheet(wb,sheet_path,staff.user.username)
+
+    row = date.day+2
+
+    ws.cell(row,4,staff.start_overtime.split()[1])
+    if staff.start_time <= staff.end_time:
+        ws.cell(row,5,staff.end_overtime.split()[1])
+    
+
+    ws.cell(row,8,staff.staff_drink)
+    ws.cell(row,9,staff.staff_bottle)
+
+    ws.cell(row,11,staff.back)
+
+    if staff.is_sending:
+        ws.cell(row,12,"✔")
+
+    ws.cell(row,13,staff.debt)
+
+    wb.save(sheet_path)
+    wb.close()
+
+def MakeNewStaffSheet(wb,path,name):
+    maching_flg = False
+    for title in wb.sheetnames:
+        if title == name:
+            maching_flg = True
+            break
+
+    if maching_flg:
+        ws = wb[name]
+    else:
+        ws = wb.copy_worksheet(wb["ひな形"])
+        ws.freeze_panes = 'A3'
+        ws.title = name
+        ws["E1"] = name
+        wb.save(path)
+
+    return ws
+
 
 
 # def ExcelToPDF():

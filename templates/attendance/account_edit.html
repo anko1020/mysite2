@@ -39,7 +39,7 @@
       </div>
   </div>
   <div class="row mb-3">
-    <div class="col-sm-10 offset-sm-2">
+    <div class="col-sm-5 offset-sm-2">
       <div class="form-check">
         {% if ChangedUser.is_sending%}
             <input class="form-check-input" type="checkbox" id="sendCheck" name="is_send" checked>
@@ -52,7 +52,16 @@
       </div>
     </div>
   </div>
-  <button type="submit" class="btn btn-primary">保存</button>
+  <div class="row">
+    <label class="col-2">前借</label>
+    <div class="col-3">      
+      <input class="form-control" name="debt" value="{{ChangedUser.debt}}">
+    </div>
+  </div>
+  <br>
+  <div class="d-grid d-flex justify-content-end">
+    <button type="submit" class="btn btn-primary">保存</button>
+  </div>
 </form>
 </div>
 

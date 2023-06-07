@@ -21,6 +21,9 @@ class Account(models.Model):
     staff_drink = models.IntegerField(default=0)
     staff_bottle = models.IntegerField(default=0)
 
+    debt = models.IntegerField(default=0)
+    back = models.IntegerField(default=0)
+
     def __str__(self):
         return self.user.username
 
@@ -41,12 +44,31 @@ class CheckSheet(models.Model):
     start_overtime = models.CharField(max_length=20, null=True)
     end_overtime = models.CharField(max_length=20, null=True)
 
-    staff = models.ManyToManyField("Account")
+    drink_staff = models.ManyToManyField("Account",related_name="drink",through="SheetStaffRelation")
+    staff = models.ManyToManyField("Account",through="SheetAccountRelation")
 
     memo_str = models.CharField(max_length=100, null=True)
     
     def __str__(self):
         return self.client_name
+
+
+class SheetAccountRelation(models.Model):
+    checksheet = models.ForeignKey("CheckSheet", on_delete=models.CASCADE)
+    account = models.ForeignKey("Account", on_delete=models.CASCADE)
+    attr = models.CharField(max_length=3, null=True)
+    back = models.IntegerField(default=0)
+    def __str__(self):
+        return self.account.user.username+self.attr
+
+
+class SheetStaffRelation(models.Model):
+    checksheet = models.ForeignKey("CheckSheet", on_delete=models.CASCADE)
+    account = models.ForeignKey("Account", on_delete=models.CASCADE)
+    drink = models.IntegerField(default=0)
+    bottle = models.IntegerField(default=0)
+    def __str__(self):
+        return self.account.user.username
 
 
 class ItemMenu(models.Model):

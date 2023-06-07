@@ -11,23 +11,24 @@ checksheet
     <input type="hidden" class="form-control" name="how_cash" id="cash_p" value="{{CheckSheet.how_cash}}">
   
     {% if not CheckSheet.asign and CheckSheet.end_overtime == "" %}
-        <input type="submit" class="btn btn-primary" name="cancel" value="アサインをキャンセル">
+        <input type="submit" class="btn btn-danger" name="cancel" value="アサインをキャンセル">
     {% endif %}
         <header>
         <h1 class="text-center">会計表</h1>
     </header>
     <main>
         <div class="row">
-            <div class="col-9">
+            <div class="col-8">
                 <h4>{{CheckSheet.start_time|date:"Y年n月j日"}}</h4> 
             </div>
-            <div class="col-3">
-                <div class="col">
-                    <h6>来店 : {{CheckSheet.start_overtime}}</h6>
-                
+            <div class="col-4 ">
+                <div class="col  d-flex justify-content-end">
+                    <h5>来店　</h5>
+                    <input type="text" name="start_time" class="form-control" value="{{CheckSheet.start_overtime}}" style="width: 100px; height: 30px;">
                 </div>
-                <div class="col">
-                    <h6>退店 : {{CheckSheet.end_overtime}}</h2>
+                <div class="col d-flex justify-content-end">
+                    <h5>退店　</h5>
+                    <input type="text" name="end_time" class="form-control" value="{{CheckSheet.end_overtime}}" style="width: 100px; height: 30px;">
                 </div>
             </div>
         </div>
@@ -39,7 +40,7 @@ checksheet
                 <thead>
                 <tr>
                     <th scope="col" style="width: 170px;">品名</th>
-                    <th scope="col" style="width: 100px;">STAFF</th>
+                    <th scope="col" style="width: 120px;">STAFF</th>
                     <th scope="col" style="width: 40px;">数量</th>
                     <th scope="col" style="width: 70px;">単価</th>
                     <th scope="col">金額</th>
@@ -107,48 +108,54 @@ checksheet
                     </div>
                     <br>
                     <div class="row" id="all_staff">
-                        <label for="dropdownMenuButton1">係</label><br>
-                        <div class="col-auto">
-                            <div class="row" name="staffs">
-                                <div class="col-auto" name="staff_select">
-                                    <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                        {{Staff.0}}
-                                    </button>
-                                    <input type="hidden" class="form-control" name="staff_account" value="{{Staff.0}}">
-                                    
-                                    <ul class="dropdown-menu" name="staff" aria-labelledby="dropdownMenuButton1">
-                                    {% for account in Staff %}
-                                    {% if not account.user.username == "admin" %}
-                                        <li><a class="dropdown-item">{{account}}</a></li>
-                                    {% endif %}
-                                    {% endfor %}
-                                    </ul>
-                                </div>
-                                {% for selectedStaff in CheckSheet.staff.all %}{% if selectedStaff != Staff.0 %}
-                                
-                                <div class="col-auto" name="staff_select">
-                                    <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                        {{selectedStaff}}
-                                    </button>
-                                    <input type="hidden" class="form-control" name="staff_account" value="{{Staff.0}}">
-                                    
-                                    <ul class="dropdown-menu" name="staff" aria-labelledby="dropdownMenuButton1">
-                                    {% for account in Staff %}
-                                    {% if not account.user.username == "admin" %}
-                                        <li><a class="dropdown-item">{{account}}</a></li>
-                                    {% endif %}
-                                    {% endfor %}
-                                    </ul>
-                                </div>
-                                {% endif %}{% endfor %}
-                            </div>
-                        </div>
-                        <div class="col-2">
-                            <button type="button" class="btn btn-otline-info rounded-circle p-1" name="staffAdd" style="width:2rem;height:2rem;"><h4>＋</h4></button>
-                        </div>
-                        <div class="col-2">
-                            <button type="button" class="btn btn-otline-info rounded-circle p-1" name="staffDelete" style="width:2rem;height:2rem;"><h4>－</h4></button>
-                        </div>
+                        <table class="table table-borderless table-sm align-middle" name="staff_table">
+                            <thead>
+                            <tr>
+                                <th scope="col" style="width: 20px;">指名</th>
+                                <th scope="col" style="width: 10px;"> 
+                                    <div class="section1 text-center">
+                                        <button type="button" class="btn btn-otline-info rounded-circle p-1" name="staffAdd" style="width:2rem;height:2rem;"><h4>＋</h4></button>
+                                        <button type="button" class="btn btn-otline-info rounded-circle p-1" name="staffDelete" style="width:2rem;height:2rem;"><h4>－</h4></button>
+                                    </div>
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody id="staff_tbody">
+                            {% for selectedStaff in CheckSheet.staff.all %}                              
+                                <tr class="selected_staff_tr">
+                                    <td>
+                                        <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false"  >
+                                            {{selectedStaff}}   
+                                            </button>
+                                        <ul class="dropdown-menu" name="staff" aria-labelledby="dropdownMenuButton">
+                                        {% for account in Staff %}
+                                            {% if not account.user.username == "admin" %}
+                                                <li><a class="dropdown-item">{{account}}</a></li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <input type="hidden" class="form-control" name="selected_staff" value="{{selectedStaff}}">
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
+                                            {% for obj in Relations %}{% if obj.account == selectedStaff %}
+                                                {{obj.attr}}
+                                            {% endif %}{% endfor %}
+                                        </button>
+                                        <ul class="dropdown-menu" id="staff_attr" aria-labelledby="dropdownMenuButton2">
+                                            <li><a class="dropdown-item">B</a></li>
+                                            <li><a class="dropdown-item">J</a></li>
+                                            <li><a class="dropdown-item">D</a></li>
+                                            <li><a class="dropdown-item">F</a></li>
+                                            <li><a class="dropdown-item">M</a></li>
+                                            <input type="hidden" class="form-control" name="staff_attr" 
+                                            value="{% for obj in Relations %}{% if obj.account == selectedStaff %}{{obj.attr}}{% endif %}{% endfor %}">
+                                        </ul>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
                 <div class="col-4">
@@ -191,7 +198,7 @@ checksheet
                 </div>
             </div>
         <div class="d-flex align-items-center">
-            <input type="text" name="client_name" class="form-control" value="{{CheckSheet}}" style="width: 200px;">
+            <input type="text" name="client_name" class="form-control" value="{{CheckSheet}}" style="width: 200px ">
             <h4>様</h4>
         </div>
         </div>
@@ -293,16 +300,16 @@ $(function(){
     })
 
     $('button[name="staffAdd"]').on("click", function(){
-        var all = $('div[name="staff_select"]').html();
+        var all = $('.selected_staff_tr').html();
         //alert(all);
-        $('div[name="staffs"]').append('<div class="col-auto" name="staff_select">'+all+'</div>');
+        $('#staff_tbody').append('<tr class="selected_staff_tr">'+all+'</tr>');
     })
 
     $('button[name="staffDelete"]').on("click", function(){
-        index = $('div[name="staff_select"]').length-1;
+        index = $('.selected_staff_tr').length-1;
         //alert(index);
         if (index > 0){
-            $('div[name="staff_select"]').eq(index).remove();
+            $('.selected_staff_tr').eq(index).remove();
         }
     })
 
@@ -316,10 +323,10 @@ $(function(){
         }
     })
 
-    $('div[name="staffs"]').on("click", 'li', function(){
+    $('#staff_tbody').on("click", 'li', function(){
         //alert($(this).parents('div[name="staff_select"]').find('input').attr("class"));
-        $(this).parents('div[name="staff_select"]').find('button').text($(this).text());
-        $(this).parents('div[name="staff_select"]').find('input').val($(this).text());
+        $(this).parents('td').find('button').text($(this).text());
+        $(this).parent().find('input').val($(this).text());
     })
     
     $('#cash_how').on("click", 'li', function(){

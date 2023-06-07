@@ -2,8 +2,28 @@
 
 
 {% block body %}
-<div class="container"><br>
-    <button class="btn btn-primary p-3" style="position: absolute">{{seat}}</button>
-</div>  
-          
+<div class="input-group mb-2">
+  <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
+      B
+  <input type="hidden" class="form-control" name="staff_account" value="B">
+  </button>
+  
+  <ul class="dropdown-menu" id="staff_attr" aria-labelledby="dropdownMenuButton2">
+      <li><a class="dropdown-item">B</a></li>
+      <li><a class="dropdown-item">J</a></li>
+      <li><a class="dropdown-item">D</a></li>
+      <li><a class="dropdown-item">F</a></li>
+      <li><a class="dropdown-item">H</a></li>
+    </ul>
+</div>
+<div class="dropdown">
+  <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+    Dropdown button
+  </button>
+  <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+    <li><a class="dropdown-item" href="#">Action</a></li>
+    <li><a class="dropdown-item" href="#">Another action</a></li>
+    <li><a class="dropdown-item" href="#">Something else here</a></li>
+  </ul>
+</div>
 {% endblock %}

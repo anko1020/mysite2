@@ -1,0 +1,72 @@
+{% extends "attendance/DB5_base.html" %}
+
+{% block body %}
+<div><br>
+<form action="{% url 'DailyEdit' %}" method="POST" >
+
+{% csrf_token %}
+<div class="container bg-light">
+
+  <h4>総売上  ￥{{total}}</h4>
+  <div class="row">
+    <table class="table table-bordered align-middle">
+        <thead>
+            <tr>
+                <th scope="col" >封筒金</th>
+                <th scope="col">買出し</th>
+                <th scope="col" >領収書</th>
+                <th scope="col" >つけ・回収</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <input type="text" name="envelop" class="form-control" value="{{envelop}}" style="text-align: center;">
+                </td>
+                <td>
+                    <input type="text" name="buyout" class="form-control" value="{{buyout}}" style="text-align: center;">
+                </td>
+                <td>
+                    <input type="text" name="receipt" class="form-control" value="{{receipt}}" style="text-align: center;"/>
+                </td>
+                <td>
+                    <input type="text" name="collect" class="form-control" value="{{collect}}" style="text-align: center;"/>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+  </div>
+  <div class="row">
+    <table class="table table-bordered align-middle">
+        <thead>
+            <tr>
+                <th scope="col" >体入</th>
+                <th scope="col">交通費</th>
+                <th scope="col" >余過剰</th>
+            </tr>
+        </thead>
+        <tbody style="text-align: center;">
+            <tr id="item_field">
+                <td>
+                    <input type="text" name="bodyin" class="form-control" value="{{bodyin}}" style="text-align: center;">
+                </td>
+                <td>
+                    <input type="text" name="fare" class="form-control" value="{{fare}}" style="text-align: center;">
+                </td>
+                <td>
+                    <input type="text" name="excess" class="form-control" value="{{excess}}" style="text-align: center;"/>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+  </div>
+  <div class="d-grid gap-2 col-6 mx-auto">
+    <input type="submit" class="btn btn-primary" value="保存">
+    <input type="submit" class="btn btn-danger" name="cancel" value="キャンセル">
+  </div>
+
+</form>
+</div>
+</div>
+
+{% endblock body %}

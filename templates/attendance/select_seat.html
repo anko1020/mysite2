@@ -59,6 +59,11 @@ select seat
         <input type="submit" name="comp_btn" class="btn btn-outline-primary" style="position: absolute; right: 10px; bottom: 20px" value="アサイン">
     </div>
     <br>
+    <a href="{% url 'Daily' %}">日報をダウンロード</a>
+    <span class="d-grid gap-2 d-md-flex justify-content-end">
+        <a class="btn btn-outline-info" href="{% url 'DailyEdit' %}">日報を編集</a>
+    </span>
+    <br><br>
     <h2>会計表</h2>
     <div class="asign_table">
         <h5>-未会計-</h5>
