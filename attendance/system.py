@@ -328,7 +328,8 @@ def UpdateDeilyStaff(wb,path,date):
         if TodayBehind12(start).day == date.day:
             ws['M'+str(i)] = staff.user.username
             ws['N'+str(i)] = staff.start_overtime.split()[1]
-            ws['O'+str(i)] = staff.end_overtime.split()[1]
+            if staff.start_time <= staff.end_time:
+                ws['O'+str(i)] = staff.end_overtime.split()[1]
             ws['P'+str(i)] = staff.staff_drink
             ws['Q'+str(i)] = staff.staff_bottle
             ws['R'+str(i)] = staff.debt

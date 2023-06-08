@@ -152,6 +152,8 @@ class Registration(TemplateView):
                     is_sending=False,
                     staff_drink=0,
                     staff_bottle=0,
+                    debt=0,
+                    back=0,
                     )
 
                 system.AddSheet(account.username)
