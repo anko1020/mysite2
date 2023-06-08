@@ -4,7 +4,7 @@
 <p align="center">{%now "Y年n月d日(D)"%}</p>
 <p align="center"><font size="30">{%now "H:i"%}</font></p>
 <form method="Post" action="{% url 'Login' %}">
-    {% csrf_token %}
+  {% csrf_token %}
   <div class="container">
     <h1>ログイン</h1>
     {% if incorrect %}

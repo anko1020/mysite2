@@ -58,6 +58,7 @@ class SheetAccountRelation(models.Model):
     account = models.ForeignKey("Account", on_delete=models.CASCADE)
     attr = models.CharField(max_length=3, null=True)
     back = models.IntegerField(default=0)
+    is_hold = models.BooleanField(default=False)
     def __str__(self):
         return self.account.user.username+self.attr
 

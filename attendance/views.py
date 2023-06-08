@@ -385,33 +385,46 @@ class CheckEditer(TemplateView):
             check_sheet_obj.delete()
             return HttpResponseRedirect(reverse("SelectSeat"))
         
-        print(request.POST.get('total_pay'))
+        print("staff_list",staff_list)
         i = 0
 
         for _staff in staff_list:
             user = get_object_or_404(User, username=_staff)
             account = get_object_or_404(Account, user=user)
             
-            relation = check_sheet_obj.sheetaccountrelation_set.filter(account=account)
-            print(relation)
+            relation = check_sheet_obj.sheetaccountrelation_set.filter(account=account,attr=staff_attr[i])
+            print("relation",relation)
             if relation.exists():
-                sheet_account = SheetAccountRelation.objects.get(account=account,checksheet=check_sheet_obj)             
+                sheet_account = SheetAccountRelation.objects.get(account=account,checksheet=check_sheet_obj,attr=staff_attr[i])             
                 sheet_account.attr = staff_attr[i]
                 time = check_sheet_obj.end_time-check_sheet_obj.start_time
                 sheet_account.back = system.BackCalc(sheet_account.attr,check_sheet_obj.client_num,int(time.total_seconds()/3600))
+                sheet_account.is_hold = True
                 sheet_account.save()
                 print("sheet_account.back")
-                print(sheet_account.back)
+                print(sheet_account)
             else:
-                SheetAccountRelation.objects.create(checksheet=check_sheet_obj,account=account,attr=staff_attr[i],back=0)
+                time = check_sheet_obj.end_time-check_sheet_obj.start_time
+                back = system.BackCalc(staff_attr[i],check_sheet_obj.client_num,int(time.total_seconds()/3600))
+                SheetAccountRelation.objects.create(checksheet=check_sheet_obj,account=account,attr=staff_attr[i],back=back,is_hold=True)
             
             account = system.UpdateAccountBack(account.pk,system.TodayBehind12(now))
+            account.save()
             system.UpadateAttendanceSheet(account.pk,system.TodayBehind12(now))
             i += 1
         i = 0
 
+        for relation in check_sheet_obj.sheetaccountrelation_set.all():
+            print("delete",relation.is_hold)
+            if relation.is_hold:
+                relation.is_hold = False
+                relation.save()
+            else:
+                relation.delete()
+
 
         print(check_sheet_obj.staff.all())
+        print( check_sheet_obj.sheetaccountrelation_set.all())
 
         for selected_staff in check_sheet_obj.staff.all():
             for _staff in staff_list:
@@ -472,7 +485,11 @@ class CheckEditer(TemplateView):
                     Menu = get_object_or_404(ItemMenu, menu="Manual"),
                 )
                 print(j)
-                
+        for drink_staff in check_sheet_obj.sheetstaffrelation_set.all():
+            drink_staff.drink = 0
+            drink_staff.bottle = 0
+            drink_staff.save()
+
         for item_obj in check_sheet_obj.item_set.all():
             if item_obj.staff != "--":
                 user = get_object_or_404(User, username=item_obj.staff)

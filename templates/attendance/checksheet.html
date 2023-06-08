@@ -121,11 +121,11 @@ checksheet
                             </tr>
                             </thead>
                             <tbody id="staff_tbody">
-                            {% for selectedStaff in CheckSheet.staff.all %}                              
+                            {% for selectedStaff in Relations %}                              
                                 <tr class="selected_staff_tr">
                                     <td>
-                                        <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false"  >
-                                            {{selectedStaff}}   
+                                        <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                            {{selectedStaff.account}}   
                                             </button>
                                         <ul class="dropdown-menu" name="staff" aria-labelledby="dropdownMenuButton">
                                         {% for account in Staff %}
@@ -133,14 +133,12 @@ checksheet
                                                 <li><a class="dropdown-item">{{account}}</a></li>
                                             {% endif %}
                                         {% endfor %}
-                                        <input type="hidden" class="form-control" name="selected_staff" value="{{selectedStaff}}">
+                                        <input type="hidden" class="form-control" name="selected_staff" value="{{selectedStaff.account.user.username}}">
                                         </ul>
                                     </td>
                                     <td>
                                         <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
-                                            {% for obj in Relations %}{% if obj.account == selectedStaff %}
-                                                {{obj.attr}}
-                                            {% endif %}{% endfor %}
+                                            {{selectedStaff.attr}}
                                         </button>
                                         <ul class="dropdown-menu" id="staff_attr" aria-labelledby="dropdownMenuButton2">
                                             <li><a class="dropdown-item">B</a></li>
@@ -148,8 +146,7 @@ checksheet
                                             <li><a class="dropdown-item">D</a></li>
                                             <li><a class="dropdown-item">F</a></li>
                                             <li><a class="dropdown-item">M</a></li>
-                                            <input type="hidden" class="form-control" name="staff_attr" 
-                                            value="{% for obj in Relations %}{% if obj.account == selectedStaff %}{{obj.attr}}{% endif %}{% endfor %}">
+                                            <input type="hidden" class="form-control" name="staff_attr" value="{{selectedStaff.attr}}">
                                         </ul>
                                     </td>
                                 </tr>
