@@ -397,6 +397,8 @@ class CheckEditer(TemplateView):
         check_sheet_obj.start_time = system.ConvertOvertimeToDatetime(check_sheet_obj.start_overtime)
         if check_sheet_obj.end_overtime != "":
             check_sheet_obj.end_time = system.ConvertOvertimeToDatetime(check_sheet_obj.end_overtime)
+        else:
+            check_sheet_obj.end_time = check_sheet_obj.start_time
         if request.POST.get('how_cash') == "現金":
             check_sheet_obj.how_cash = "現金"
         else:
