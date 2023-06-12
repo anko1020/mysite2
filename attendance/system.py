@@ -272,11 +272,13 @@ def UpdateAccountDrink(pk,date):
 def UpdateAccountBack(pk,date):
     staff = get_object_or_404(Account,pk=pk)
     staff.back = 0
+    staff.earnings = 0
     staff.save()
-    for back_realtion in staff.sheetaccountrelation_set.all():
-        start = timezone.localtime(back_realtion.checksheet.start_time)
+    for relation in staff.sheetaccountrelation_set.all():
+        start = timezone.localtime(relation.checksheet.start_time)
         if TodayBehind12(start).day == date.day:
-            staff.back += back_realtion.back
+            staff.back += relation.back
+            staff.earnings += relation.earnings
             staff.save()
     return staff
 
@@ -287,10 +289,14 @@ def BackCalc(_type,client_num,time):
             back = 300*client_num*time
         case "J":
             print("J")
-        case "D":
-            back = 3000
-        case "M":
-            back = (500+300*(time-1)*client_num)
+        case "BJ":
+            print("back",type(client_num))
+            back = 300*client_num*time
+        case "DM":
+            if time == 0:
+                time = 1
+            back = (500+300*(time-1)*client_num)+3000
+    print("attr",_type,"num",client_num,"time",time,"back",back)
     return back
 
 def UpdateDaily(date):
@@ -380,6 +386,7 @@ def UpadateAttendanceSheet(pk, date):
     if staff.start_time <= staff.end_time:
         ws.cell(row,5,staff.end_overtime.split()[1])
     
+    ws.cell(row,7,staff.earnings)
 
     ws.cell(row,8,staff.staff_drink)
     ws.cell(row,9,staff.staff_bottle)

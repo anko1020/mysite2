@@ -16,6 +16,8 @@ class Account(models.Model):
     start_overtime = models.CharField(max_length=20, null=True)
     end_overtime = models.CharField(max_length=20, null=True)
 
+    earnings = models.IntegerField(default=0)
+
     is_sending = models.BooleanField(default=False)
 
     staff_drink = models.IntegerField(default=0)
@@ -57,6 +59,7 @@ class SheetAccountRelation(models.Model):
     checksheet = models.ForeignKey("CheckSheet", on_delete=models.CASCADE)
     account = models.ForeignKey("Account", on_delete=models.CASCADE)
     attr = models.CharField(max_length=3, null=True)
+    earnings = models.IntegerField(default=0)
     back = models.IntegerField(default=0)
     is_hold = models.BooleanField(default=False)
     def __str__(self):

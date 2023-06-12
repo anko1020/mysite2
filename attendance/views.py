@@ -227,8 +227,8 @@ def AccountEditer(request, pk):
         if request.POST.get('start_t') != None:
             account.start_overtime = request.POST.get('start_t')
             account.start_time = system.ConvertOvertimeToDatetime(account.start_overtime)
-        if request.POST.get('end_t') != None:            
-            account.start_overtime = request.POST.get('end_t')
+        if request.POST.get('end_t') != None:      
+            account.end_overtime = request.POST.get('end_t')
             account.end_time = system.ConvertOvertimeToDatetime(account.start_overtime)
         account.debt = request.POST.get('debt')
         account.is_sending = request.POST.get('is_send') == "on"
@@ -271,6 +271,11 @@ def daily(request):
             
     #response = HttpResponse(open(path_excel, 'rb').read(), content_type='application/vnd.ms-excel')
     pdf_name = "QB Daily Report.xlsx"
+    wb = load_workbook(path)
+    wb["OriginRevised"].sheet_view.tabSelected = False
+    wb.active = wb["Revised"]
+    wb.save(path)
+    wb.close()
     response = HttpResponse(open(path, 'rb').read(), content_type=mimetypes.guess_type(pdf_name)[0])
     
     response['Content-Disposition'] = f'attachment; filename={pdf_name}'
@@ -385,13 +390,60 @@ class CheckEditer(TemplateView):
             check_sheet_obj.delete()
             return HttpResponseRedirect(reverse("SelectSeat"))
         
+        check_sheet_obj.total_fee = int(request.POST.get('total-f'))
+        check_sheet_obj.discount = int(request.POST.get('discount'))
+        check_sheet_obj.start_overtime = request.POST.get('start_time')
+        check_sheet_obj.end_overtime = request.POST.get('end_time')
+        check_sheet_obj.start_time = system.ConvertOvertimeToDatetime(check_sheet_obj.start_overtime)
+        if check_sheet_obj.end_overtime != "":
+            check_sheet_obj.end_time = system.ConvertOvertimeToDatetime(check_sheet_obj.end_overtime)
+        if request.POST.get('how_cash') == "現金":
+            check_sheet_obj.how_cash = "現金"
+        else:
+            check_sheet_obj.how_cash = "カード"
+        check_sheet_obj.client_name = request.POST.get('client_name')
+        check_sheet_obj.client_num = int(request.POST.get('client_num'))
+        check_sheet_obj.memo_str = request.POST.get('memo')
+
+        if check_sheet_obj.end_overtime == "":
+            check_sheet_obj.asign = True
+        check_sheet_obj.save()
+        
+        i = 0
+
+        for item_obj in check_sheet_obj.item_set.all():
+            if item_num > i:
+                item_obj.item_name = item_name_list[i]
+                item_obj.staff = drink_list[i]
+                item_obj.item_num = int(item_num_list[i])
+                item_obj.item_cost = int(item_cost_list[i])
+                print(item_obj)
+                item_obj.save()
+            else:
+                item_obj.delete()
+            i += 1
+
+        if i < len(item_name_list):
+            for j in range(i,len(item_name_list)):
+                new_item = Item.objects.create(
+                    item_name = item_name_list[j],
+                    staff = drink_list[i],
+                    item_num = item_num_list[j],
+                    item_cost = item_cost_list[j],
+                    checkSheet = check_sheet_obj,
+                    Menu = get_object_or_404(ItemMenu, menu="Manual"),
+                )
+                print(j)
+                
         print("staff_list",staff_list)
         i = 0
 
         for _staff in staff_list:
+            if _staff == "":
+                break
             user = get_object_or_404(User, username=_staff)
             account = get_object_or_404(Account, user=user)
-            
+
             relation = check_sheet_obj.sheetaccountrelation_set.filter(account=account,attr=staff_attr[i])
             print("relation",relation)
             if relation.exists():
@@ -408,18 +460,21 @@ class CheckEditer(TemplateView):
                 back = system.BackCalc(staff_attr[i],check_sheet_obj.client_num,int(time.total_seconds()/3600))
                 SheetAccountRelation.objects.create(checksheet=check_sheet_obj,account=account,attr=staff_attr[i],back=back,is_hold=True)
             
-            account = system.UpdateAccountBack(account.pk,system.TodayBehind12(now))
-            account.save()
-            system.UpadateAttendanceSheet(account.pk,system.TodayBehind12(now))
             i += 1
         i = 0
 
         for relation in check_sheet_obj.sheetaccountrelation_set.all():
-            print("delete",relation.is_hold)
+            relation.earnings = check_sheet_obj.total_fee/check_sheet_obj.sheetaccountrelation_set.all().count()
+            print("earnig",relation.earnings)
             if relation.is_hold:
                 relation.is_hold = False
                 relation.save()
+
+                system.UpdateAccountBack(relation.account.pk,system.TodayBehind12(now))
+                system.UpadateAttendanceSheet(account.pk,system.TodayBehind12(now))
+
             else:
+                print("delete",relation)
                 relation.delete()
 
 
@@ -441,50 +496,6 @@ class CheckEditer(TemplateView):
             
         print(check_sheet_obj.sheetaccountrelation_set.all().values_list('account', 'checksheet', 'attr'))
 
-        check_sheet_obj.total_fee = request.POST.get('total-f')
-        check_sheet_obj.discount = request.POST.get('discount')
-        check_sheet_obj.start_overtime = request.POST.get('start_time')
-        check_sheet_obj.end_overtime = request.POST.get('end_time')
-        check_sheet_obj.start_time = system.ConvertOvertimeToDatetime(check_sheet_obj.start_overtime)
-        if check_sheet_obj.end_overtime != "":
-            check_sheet_obj.end_time = system.ConvertOvertimeToDatetime(check_sheet_obj.end_overtime)
-        if request.POST.get('how_cash') == "現金":
-            check_sheet_obj.how_cash = "現金"
-        else:
-            check_sheet_obj.how_cash = "カード"
-        check_sheet_obj.client_name = request.POST.get('client_name')
-        check_sheet_obj.client_num = request.POST.get('client_num')
-        check_sheet_obj.memo_str = request.POST.get('memo')
-
-        if check_sheet_obj.end_overtime == "":
-            check_sheet_obj.asign = True
-        check_sheet_obj.save()
-        
-        i = 0
-
-        for item_obj in check_sheet_obj.item_set.all():
-            if item_num > i:
-                item_obj.item_name = item_name_list[i]
-                item_obj.staff = drink_list[i]
-                item_obj.item_num = item_num_list[i]
-                item_obj.item_cost = item_cost_list[i]
-                print(item_obj)
-                item_obj.save()
-            else:
-                item_obj.delete()
-            i += 1
-
-        if i < len(item_name_list):
-            for j in range(i,len(item_name_list)):
-                new_item = Item.objects.create(
-                    item_name = item_name_list[j],
-                    staff = drink_list[i],
-                    item_num = item_num_list[j],
-                    item_cost = item_cost_list[j],
-                    checkSheet = check_sheet_obj,
-                    Menu = get_object_or_404(ItemMenu, menu="Manual"),
-                )
-                print(j)
         for drink_staff in check_sheet_obj.sheetstaffrelation_set.all():
             drink_staff.drink = 0
             drink_staff.bottle = 0
@@ -501,7 +512,7 @@ class CheckEditer(TemplateView):
                     
                     if item_obj.item_name == "キャストドリンク":
                         sheet_account.drink = int(item_obj.item_num)
-                    else:
+                    elif item_obj.item_name != "F" and item_obj.item_name != "VIP":
                         sheet_account.bottle = int(item_obj.item_cost)*int(item_obj.item_num)
                     sheet_account.save()
                     print("sheet_account.drink")

@@ -36,14 +36,15 @@ checksheet
         <div class="row">
         <div class="col-md-9">
             <div style="margin: 20px 50;">
-            <table class="table table-bordered table-sm align-middle" name="order_table">
+            <table class="table table-bordered table-sm align-middle">
                 <thead>
                 <tr>
                     <th scope="col" style="width: 170px;">品名</th>
                     <th scope="col" style="width: 120px;">STAFF</th>
                     <th scope="col" style="width: 40px;">数量</th>
                     <th scope="col" style="width: 70px;">単価</th>
-                    <th scope="col">金額</th>
+                    <th scope="col" style="width: 50px;">金額</th>
+                    <th scope="col"></th>
                 </tr>
                 </thead>
                 <tbody id="order" style="text-align: center;">
@@ -82,6 +83,11 @@ checksheet
                             </td>
                             <td>
                                 <p name="total">0</p>
+                            </td>
+                            <td>
+                                <button type="button" class="btn oreder_delete">
+                                    <i class="bi bi-trash"></i><div class="section1 text-center">
+                                </button>
                             </td>
                         </tr>
                     {% endfor %}
@@ -123,7 +129,7 @@ checksheet
                             <tbody id="staff_tbody">
                             {% for selectedStaff in Relations %}                              
                                 <tr class="selected_staff_tr">
-                                    <td>
+                                    <td id="name">
                                         <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                                             {{selectedStaff.account}}   
                                             </button>
@@ -136,16 +142,15 @@ checksheet
                                         <input type="hidden" class="form-control" name="selected_staff" value="{{selectedStaff.account.user.username}}">
                                         </ul>
                                     </td>
-                                    <td>
+                                    <td id="attr">
                                         <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
                                             {{selectedStaff.attr}}
                                         </button>
                                         <ul class="dropdown-menu" id="staff_attr" aria-labelledby="dropdownMenuButton2">
                                             <li><a class="dropdown-item">B</a></li>
                                             <li><a class="dropdown-item">J</a></li>
-                                            <li><a class="dropdown-item">D</a></li>
-                                            <li><a class="dropdown-item">F</a></li>
-                                            <li><a class="dropdown-item">M</a></li>
+                                            <li><a class="dropdown-item">BJ</a></li>
+                                            <li><a class="dropdown-item">DM</a></li>
                                             <input type="hidden" class="form-control" name="staff_attr" value="{{selectedStaff.attr}}">
                                         </ul>
                                     </td>
@@ -258,13 +263,13 @@ $(function(){
         }
     });
 
-    $('table[name="order_table"]').on("change", '#itemNumber', paymentCalc);
-    $('table[name="order_table"]').on("change", '#itemCost', paymentCalc);
+    $('#order').on("change", '#itemNumber', paymentCalc);
+    $('#order').on("change", '#itemCost', paymentCalc);
     $('input[name="discount"]').on("change", paymentCalc);
 
     function paymentCalc(){
         var sum = 0;
-        for(var i=0;i<$('table[name="order_table"] #itemNumber').length;i++){
+        for(var i=0;i<$('#order #itemNumber').length;i++){
             var num = $('input[name="item_num"]').eq(i).val();
             var cost = $('input[name="item_cost"]').eq(i).val();
             var totals = num*cost;
@@ -286,31 +291,48 @@ $(function(){
     $('button[name="orderAdd"]').on("click", function(){
         var all = $('#item_field').html();
         //alert(all);
-        $('table[name="order_table"]').append('<tr id="item_field">'+all+'</tr>');
+        $('#order').append('<tr id="item_field">'+all+'</tr>');
         
-        var item_length = $('table[name="order_table"] #itemNumber').length-1;
+        var item_length = $('#order #itemNumber').length-1;
         $('input[name="item_name"]').eq(item_length).val("");
         $('input[name="item_num"]').eq(item_length).val(0);
         $('input[name="item_cost"]').eq(item_length).val(0);
-        $('p[name="total"]').eq(item_length).text("0");
-        
+        $('p[name="total"]').eq(item_length).text("0");  
     })
 
-    $('button[name="staffAdd"]').on("click", function(){
-        var all = $('.selected_staff_tr').html();
-        //alert(all);
-        $('#staff_tbody').append('<tr class="selected_staff_tr">'+all+'</tr>');
+    $('#order').on("click", '.oreder_delete', function(){
+        //alert($('#order').find('tr').length);
+        if($('#order').find('tr').length > 1){
+            $(this).parents('tr').remove();
+        }
+    })
+
+    $('button[name="staffAdd"]').on("click", function(){        
+        index = $('.selected_staff_tr').length-1;
+        if($('.selected_staff_tr').hasClass('d-none')){
+            //alert(all);
+            $('.selected_staff_tr').removeClass('d-none');
+            $('#name').find('li').eq(0).trigger('click');
+            $('#attr').find('li').eq(0).trigger('click');
+        }else{
+            var all = $('.selected_staff_tr').html();
+            $('#staff_tbody').append('<tr class="selected_staff_tr">'+all+'</tr>');
+        }
     })
 
     $('button[name="staffDelete"]').on("click", function(){
         index = $('.selected_staff_tr').length-1;
         //alert(index);
-        if (index > 0){
+        if(index == 0){
+            $('.selected_staff_tr').addClass('d-none');
+            $('.selected_staff_tr').find('input').val("");
+        }
+        else{
             $('.selected_staff_tr').eq(index).remove();
         }
     })
 
-    $('table[name="order_table"]').on("click", 'li', function(){
+    $('#order').on("click", 'li', function(){
         //alert();
         $(this).parent().parent().find('input').val($(this).text());
         if($(this).attr("class") == "order_items"){
