@@ -397,6 +397,27 @@ def UpadateAttendanceSheet(pk, date):
         ws.cell(row,12,"✔")
 
     ws.cell(row,13,staff.debt)
+    earnig_total = 0
+    for i in range(calendar.monthrange(2023, TodayBehind12(now).month)[1]):
+        if ws['G'+str(3+i)].value is not None:
+            earnig_total += ws['G'+str(3+i)].value
+    #print("earnig_total",earnig_total)
+
+    if earnig_total < 200000:
+        wage_index = 4
+    elif earnig_total >= 2000000:
+        wage_index = 18
+    else:
+        wage_index = earnig_total//100000+3
+
+    wage_table_path = wageTime_dir/'template.xlsx'
+    wage_wb = load_workbook(wage_table_path)
+    wage_ws = wage_wb["給料テーブル"]
+    wage = wage_ws["C"+str(wage_index)].value
+    wage_wb.close()
+    print("wage",wage)
+
+    ws.cell(5,16,wage)
 
     wb.save(sheet_path)
     wb.close()
