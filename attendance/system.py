@@ -289,7 +289,7 @@ def BackCalc(_type,client_num,time):
     match _type:
         case "B":
             back = 300*client_num*time
-        case "M:
+        case "M":
             print("M")
             if time == 0:
                 time = 1
