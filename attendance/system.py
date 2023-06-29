@@ -220,9 +220,11 @@ def DeleteSheet(user):
         
 def ConvertOvertimeToDatetime(overdatetime):
     now = timezone.localtime(timezone.now())
-
-    date = overdatetime.split()[0]
-    time = overdatetime.split()[1]
+    try:
+        date = overdatetime.split()[0]
+        time = overdatetime.split()[1]
+    except:
+        return now
     hour = int(time.split(':')[0])
     minute = int(time.split(':')[1])
 
@@ -333,9 +335,12 @@ def UpdateDeilyStaff(wb,path,date):
         print(TodayBehind12(start).day, date.day)
         if TodayBehind12(start).day == date.day:
             ws['M'+str(i)] = staff.user.username
-            ws['N'+str(i)] = staff.start_overtime.split()[1]
-            if staff.start_time <= staff.end_time:
-                ws['O'+str(i)] = staff.end_overtime.split()[1]
+            try:
+                ws['N'+str(i)] = staff.start_overtime.split()[1]
+                if staff.start_time <= staff.end_time:
+                    ws['O'+str(i)] = staff.end_overtime.split()[1]
+            except:
+                print("over")
             ws['P'+str(i)] = staff.staff_drink
             ws['Q'+str(i)] = staff.staff_bottle
             ws['R'+str(i)] = staff.debt
@@ -382,10 +387,12 @@ def UpadateAttendanceSheet(pk, date):
 
     row = date.day+2
 
-    ws.cell(row,4,staff.start_overtime.split()[1])
-    if staff.start_time <= staff.end_time:
-        ws.cell(row,5,staff.end_overtime.split()[1])
-    
+    try:
+        ws.cell(row,4,staff.start_overtime.split()[1])
+        if staff.start_time <= staff.end_time:
+            ws.cell(row,5,staff.end_overtime.split()[1])
+    except:
+        print("over")
     ws.cell(row,7,staff.earnings)
 
     ws.cell(row,8,staff.staff_drink)
