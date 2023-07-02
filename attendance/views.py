@@ -226,10 +226,10 @@ def AccountEditer(request, pk):
         password = request.POST.get('password')
         if request.POST.get('start_t') != None:
             account.start_overtime = request.POST.get('start_t')
-            account.start_time = system.ConvertOvertimeToDatetime(account.start_overtime)
+            account.start_time = system.ConvertOverdatetimeToDatetime(account.start_overtime)
         if request.POST.get('end_t') != None:      
             account.end_overtime = request.POST.get('end_t')
-            account.end_time = system.ConvertOvertimeToDatetime(account.start_overtime)
+            account.end_time = system.ConvertOverdatetimeToDatetime(account.start_overtime)
         account.debt = request.POST.get('debt')
         account.is_sending = request.POST.get('is_send') == "on"
         
@@ -320,10 +320,12 @@ class SelectSeat(ListView):
                 client_num      =   len(asign_seats),
                 start_time      =   now,
                 end_time        =   now,
-                start_overtime  =   system.ConvertDatetimeToOvertime(now),
+                #start_overtime  =   system.ConvertDatetimeToOvertime(now).split()[1],
+                start_overtime  =   now.strftime("%H:%M"),
                 end_overtime    =   "",
                 memo_str        =   "",
             )
+            print("start_overtime",sheet.start_overtime)
             staff0 = Account.objects.all()[0]
             SheetAccountRelation.objects.create(checksheet=sheet,account=staff0,attr="B")
             for seat in seat_list:
@@ -364,6 +366,7 @@ class CheckEditer(TemplateView):
 
     def post(self, request, pk):
         now = timezone.localtime(timezone.now())
+        delay_date = system.TodayBehind12(now)
 
         item_name_list = request.POST.getlist('item_name')
         drink_list = request.POST.getlist('staff_name')
@@ -394,9 +397,9 @@ class CheckEditer(TemplateView):
         check_sheet_obj.discount = int(request.POST.get('discount'))
         check_sheet_obj.start_overtime = request.POST.get('start_time')
         check_sheet_obj.end_overtime = request.POST.get('end_time')
-        check_sheet_obj.start_time = system.ConvertOvertimeToDatetime(check_sheet_obj.start_overtime)
+        check_sheet_obj.start_time = system.ConvertOvertimeToDatetime(delay_date,check_sheet_obj.start_overtime)
         if check_sheet_obj.end_overtime != "":
-            check_sheet_obj.end_time = system.ConvertOvertimeToDatetime(check_sheet_obj.end_overtime)
+            check_sheet_obj.end_time = system.ConvertOvertimeToDatetime(delay_date,check_sheet_obj.end_overtime)
         else:
             check_sheet_obj.end_time = check_sheet_obj.start_time
         if request.POST.get('how_cash') == "現金":
@@ -472,8 +475,8 @@ class CheckEditer(TemplateView):
                 relation.is_hold = False
                 relation.save()
 
-                system.UpdateAccountBack(relation.account.pk,system.TodayBehind12(now))
-                system.UpadateAttendanceSheet(account.pk,system.TodayBehind12(now))
+                system.UpdateAccountBack(relation.account.pk,delay_date)
+                system.UpadateAttendanceSheet(account.pk,delay_date)
 
             else:
                 print("delete",relation)
@@ -522,8 +525,8 @@ class CheckEditer(TemplateView):
                 else:
                     SheetStaffRelation.objects.create(checksheet=check_sheet_obj,account=account,drink=int(item_obj.item_num),bottle=int(item_obj.item_cost))
 
-                account = system.UpdateAccountDrink(account.pk,system.TodayBehind12(now))
-                system.UpadateAttendanceSheet(account.pk,system.TodayBehind12(now))
+                account = system.UpdateAccountDrink(account.pk,delay_date)
+                system.UpadateAttendanceSheet(account.pk,delay_date)
 
                 print("asada",check_sheet_obj.start_time)
                 #system.UpadateAttendanceSheet(account.pk,system.TodayBehind12(check_sheet_obj.start_time))
@@ -531,12 +534,12 @@ class CheckEditer(TemplateView):
 
         if "payment" in request.POST:
             if check_sheet_obj.end_overtime == "":
-                check_sheet_obj.end_overtime = system.ConvertDatetimeToOvertime(now)
+                check_sheet_obj.end_overtime = system.ConvertDatetimeToOvertime(now).split()[1]
                 check_sheet_obj.save()
             return HttpResponseRedirect(reverse("CompSheet", kwargs={'pk':check_sheet_obj.pk}))
         
         if not check_sheet_obj.asign:
-            system.UpdateDaily(system.TodayBehind12(now))
+            system.UpdateDaily(delay_date)
 
         print(check_sheet_obj)
         return HttpResponseRedirect(reverse("SelectSeat"))
@@ -568,7 +571,7 @@ class CompCheckSheet(TemplateView):
             seat.save()
 
         print(check_sheet_obj)
-        check_sheet_obj.end_time = system.ConvertOvertimeToDatetime(check_sheet_obj.end_overtime)
+        check_sheet_obj.end_time = system.ConvertOvertimeToDatetime(system.TodayBehind12(now),check_sheet_obj.end_overtime)
         check_sheet_obj.asign = False
         check_sheet_obj.save()
 

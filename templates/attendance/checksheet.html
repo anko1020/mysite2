@@ -7,7 +7,6 @@ checksheet
 <div class="container">
     <form action="{% url 'CheckSheet' pk=CheckSheet.pk %}" method="post">
     {% csrf_token %}
-    <input type="hidden" class="form-control" name="total_pay" id="total_fee" value="{{CheckSheet.total_fee}}">
     <input type="hidden" class="form-control" name="how_cash" id="cash_p" value="{{CheckSheet.how_cash}}">
   
     {% if not CheckSheet.asign and CheckSheet.end_overtime == "" %}
@@ -24,11 +23,11 @@ checksheet
             <div class="col-4 ">
                 <div class="col  d-flex justify-content-end">
                     <h5>来店　</h5>
-                    <input type="text" name="start_time" class="form-control" value="{{CheckSheet.start_overtime}}" style="width: 100px; height: 30px;">
+                    <input type="time" name="start_time" class="form-control" max="36:59" value="{{CheckSheet.start_overtime}}" style="width: 100px; height: 30px;">
                 </div>
                 <div class="col d-flex justify-content-end">
                     <h5>退店　</h5>
-                    <input type="text" name="end_time" class="form-control" value="{{CheckSheet.end_overtime}}" style="width: 100px; height: 30px;">
+                    <input type="time" name="end_time" class="form-control" max="36:59" value="{{CheckSheet.end_overtime}}" style="width: 100px; height: 30px;">
                 </div>
             </div>
         </div>
@@ -58,8 +57,7 @@ checksheet
                                         {% for item in Menu.item_set.all %}
                                         <li class="order_items" data-num="{{item.item_num}}" data-cost="{{item.item_cost}}"><a class="dropdown-item">{{item}}</a></li>
                                         {% endfor %}
-                                    </ul>
-                                </div>
+                                    </ul>                                </div>
                             </td>
                             <td>
                                 <div class="input-group mb-2">
@@ -212,7 +210,7 @@ checksheet
                         <tr>
                             <th scope="row">税込合計金額</th>
                             <td>
-                                <input class="form-control" name="total-f" value="{{CheckSheet.total_fee}}">
+                                <input class="form-control" name="total-f" data-total="{{CheckSheet.total_fee}}" value="{{CheckSheet.total_fee}}">
                             </td>
                         </tr>
                     </tbody>
@@ -255,6 +253,7 @@ checksheet
 
 $(function(){
     paymentCalc();
+    $('input[name="total-f"]').val($('input[name="total-f"]').data('total'));
 
     var total = 0;
 
@@ -286,7 +285,6 @@ $(function(){
         //discount = 0;
         total = Math.round(1.1*sum)-discount*1;
         $('input[name="total-f"]').val(total);
-        $('#total_fee').val(total);
     }
 
     $('button[name="orderAdd"]').on("click", function(){

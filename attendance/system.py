@@ -218,7 +218,7 @@ def DeleteSheet(user):
         wb.remove(wb[user])
         wb.save(sheet_path)
         
-def ConvertOvertimeToDatetime(overdatetime):
+def ConvertOverdatetimeToDatetime(overdatetime):
     now = timezone.localtime(timezone.now())
     try:
         date = overdatetime.split()[0]
@@ -232,6 +232,24 @@ def ConvertOvertimeToDatetime(overdatetime):
     if(hour/24 > 0 and hour > 24):
         convertedDateTime = convertedDateTime + timedelta(days=int(hour/24))
         hour %= 24
+        
+    convertedDateTime = convertedDateTime.replace(hour=hour, minute=minute)
+
+    print("converted:")
+    print(convertedDateTime)
+    return convertedDateTime
+
+def ConvertOvertimeToDatetime(now,overdatetime):    
+
+    hour = int(overdatetime.split(':')[0])
+    minute = int(overdatetime.split(':')[1])
+
+    convertedDateTime = now
+    if(hour//24 > 0):
+        convertedDateTime = convertedDateTime + timedelta(days=int(hour/24))
+        hour %= 24
+    elif(hour < 7):
+        convertedDateTime = convertedDateTime + timedelta(days=1)
         
     convertedDateTime = convertedDateTime.replace(hour=hour, minute=minute)
 
@@ -333,6 +351,9 @@ def UpdateDeilyStaff(wb,path,date):
     i = 13
     j = 5
     ws = wb["Revised"]
+    for row in range(i,i+20):
+        for col in range(i,i+7):
+            ws.cell(row,col,"")
     for staff in Account.objects.all():
         start = timezone.localtime(staff.start_time)
         print(TodayBehind12(start).day, date.day)
