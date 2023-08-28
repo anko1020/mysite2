@@ -95,24 +95,33 @@ select seat
         </table>
         <br>
         <div class="non_asign_table">
-            <h5>-会計済-</h5>
+            <h5>-会計済-</h5>            
+            <!-- <div class="btn-toolbar justify-content-between">
+                <form class="select_month" action="{% url "MonthChoice" %}" method="POST">{% csrf_token %}
+                <button type="submit" class="btn minus_month">＜</button>
+                <p>{% now "M" %}</p>
+                <button type="submit" class="btn pulse_month">＞</button>
+
+                </form>
+            </div> -->
             <table class="table table-striped">
                 <thead>
                     <tr>
-                    <th scope="col">お客様名</th>
-                    <th scope="col">お支払い金額</th>
-                    <th scope="col">来店時間</th>
-                    <th scope="col">退店時間</th>
+                        <th scope="col">お客様名</th>
+                        <th scope="col">お支払い金額</th>
+                        <th scope="col">来店時間</th>
+                        <th scope="col">退店時間</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="payed_checksheets">
                     {% for sheet in CheckSheet_list %}
                     {% if sheet.client_name != "clientGOD" and not sheet.asign %}
+                    
                         <tr data-href="{% url 'CheckSheet' pk=sheet.pk %}">
-                        <td>{{sheet.client_name}}</td>
-                        <td>¥{{sheet.total_fee}}</td>
-                        <td>{{sheet.start_overtime}}</td>
-                        <td>{{sheet.end_overtime}}</td>
+                            <td>{{sheet.client_name}}</td>
+                            <td>¥{{sheet.total_fee}}</td>
+                            <td>{{sheet.start_overtime}}</td>
+                            <td>{{sheet.end_overtime}}</td>
                         </tr>
                     {% endif %}
                     {% endfor %}
@@ -126,9 +135,68 @@ select seat
 {% endblock body %}
 
 {% block script %}
-    var is_primary;
-    var is_danger;
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    var csrftoken = getCookie('csrftoken');
+
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
     $(function(){
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+    
+    $('.minus_month').on('click', function(e){
+        var month = {% now "m" %}
+        //alert(month-1);
+        e.preventDefault();
+            $.ajax({
+                'url': '{% url "MonthChoice"%}',
+                'type': 'POST',
+                'data': {
+                    'disp_month': (month-1)%12,
+                },
+                'dataType': 'json'
+            })
+            .done(function(response){
+                alert($('.select_month').find('p').attr());
+                sheets = response.sheets;
+                $('.select_month').find('p').text(response.month+"月")
+                $('.payed_checksheets').empty();
+                /*for(var i=0; i<sheets.length; i++){
+                    $('.payed_checksheets').append(
+                        '<tr data-href="{% url 'CheckSheet' pk=123 %}".replace(/123/,shhets[i][0])>'
+                            <td>+sheets[i][1]+</td>
+                            <td>¥+sheets[i][2]+</td>
+                            <td>+sheets[i][3]+</td>
+                            <td>+sheets[i][4]+</td>
+                            </td>
+                        </tr>
+                    )
+                }*/
+            });
+    });
         $('input').click(function(){
             //alert($(this).parents("label").attr("class"));
             if($(this).prop('checked')){

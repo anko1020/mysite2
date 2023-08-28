@@ -12,6 +12,7 @@ urlpatterns = [
     path("pdf/<int:pk>", views.DownloadExcel ,name="PopExcel"),
     path("daily", views.daily ,name="Daily"),
     path("seat", views.SelectSeat.as_view(), name="SelectSeat"),
+    path("month",views.ajax_month_change,name="MonthChoice"),
     path("checksheet/<int:pk>", views.CheckEditer.as_view(), name="CheckSheet"),
     path("compSheet/<int:pk>", views.CompCheckSheet.as_view(), name="CompSheet"),
     path("dailyedit", views.DailyEditer, name="DailyEdit"),

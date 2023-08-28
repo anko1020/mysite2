@@ -46,7 +46,7 @@
                 </td>
                 <td>
                     <a href="{% url 'PopExcel' pk=account.pk %}" target="_blank" rel="noreferrer noopener">excel</a>
-                </td> 
+                </td>
                
             {% endif %}
             </div>
@@ -54,6 +54,7 @@
         {% endfor %}
         </tbody>
       </table>
+      <button type="submit" class="btn btn-secondary me-md-2" name="all_leave">一斉退勤</button><br><br>
       <a href="{% url 'Register' %}">新規登録はこちら</a><br>
       <a href="{% url 'Login' %}">ログインはこちら</a><br><br>
       <a href="{% url 'Daily' %}">日報をダウンロード</a>

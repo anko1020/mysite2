@@ -3,16 +3,32 @@
 {% block title %}
 checksheet
 {% endblock title %}
+
+{% block head %}
+    <link href="checksheet.css" rel="stylesheet">
+{% endblock head %}
+
 {% block body %}
 <div class="container">
     <form action="{% url 'CheckSheet' pk=CheckSheet.pk %}" method="post">
     {% csrf_token %}
     <input type="hidden" class="form-control" name="how_cash" id="cash_p" value="{{CheckSheet.how_cash}}">
-  
-    {% if not CheckSheet.asign and CheckSheet.end_overtime == "" %}
-        <input type="submit" class="btn btn-danger" name="cancel" value="アサインをキャンセル">
-    {% endif %}
-        <header>
+    
+    <div class="btn-toolbar justify-content-between">
+        <div>
+            <input type="submit" class="btn btn-secondary" name="undo" value="戻る">
+            
+        </div>
+        <div>
+            {% if not CheckSheet.asign and CheckSheet.end_overtime == "" %}
+                <input type="submit" class="btn btn-danger" name="cancel" value="アサインをキャンセル">
+            {% else %}
+                <input type="submit" class="btn btn-danger" name="delete" value="削除">
+            {% endif %}
+        </div>
+    </div>
+    
+    <header>
         <h1 class="text-center">会計表</h1>
     </header>
     <main>
@@ -40,8 +56,8 @@ checksheet
                 <tr>
                     <th scope="col" style="width: 170px;">品名</th>
                     <th scope="col" style="width: 120px;">STAFF</th>
-                    <th scope="col" style="width: 40px;">数量</th>
-                    <th scope="col" style="width: 70px;">単価</th>
+                    <th scope="col" style="width: 150px;">数量</th>
+                    <th scope="col" style="width: 50px;">単価</th>
                     <th scope="col" style="width: 50px;">金額</th>
                     <th scope="col"></th>
                 </tr>
@@ -57,7 +73,8 @@ checksheet
                                         {% for item in Menu.item_set.all %}
                                         <li class="order_items" data-num="{{item.item_num}}" data-cost="{{item.item_cost}}"><a class="dropdown-item">{{item}}</a></li>
                                         {% endfor %}
-                                    </ul>                                </div>
+                                    </ul>                              
+                                </div>
                             </td>
                             <td>
                                 <div class="input-group mb-2">
@@ -74,7 +91,11 @@ checksheet
                                 </div>
                             </td>
                             <td>
-                                <input type="number" name="item_num" id="itemNumber" class="form-control" value="{{item.item_num}}" style="width: 60px; text-align: center;"/>
+                                <div class="input-group">
+                                    <button type="button" class="btn btn-outline-primary btn-sm num_down">－</button>
+                                    <input type="text" name="item_num" id="itemNumber" class="form-control" value="{{item.item_num}}" style="text-align: center;" readonly/>
+                                    <button type="button" class="btn btn-outline-primary btn-sm num_up">＋</button>
+                                </div>
                             </td>
                             <td>
                                 <input type="text" pattern="^[0-9]+$" name="item_cost" id="itemCost" class="form-control" value="{{item.item_cost}}" style="width: 70px; text-align: center;"/>
@@ -84,7 +105,7 @@ checksheet
                             </td>
                             <td>
                                 <button type="button" class="btn oreder_delete">
-                                    <i class="bi bi-trash"></i><div class="section1 text-center">
+                                    <i class="bi bi-trash"></i>
                                 </button>
                             </td>
                         </tr>
@@ -286,6 +307,22 @@ $(function(){
         total = Math.round(1.1*sum)-discount*1;
         $('input[name="total-f"]').val(total);
     }
+
+    $('#order').on("click", '.num_down', function(){
+        var num = $(this).parent().find('input').val()*1;
+        //alert(num);
+        if (num > 0){
+            $(this).parent().find('input').val(num-1);
+        }
+        paymentCalc();
+    })
+
+    $('#order').on("click", '.num_up', function(){
+        var num = $(this).parent().find('input').val()*1;
+        //alert(num+1);
+        $(this).parent().find('input').val(num+1);
+        paymentCalc();
+    })
 
     $('button[name="orderAdd"]').on("click", function(){
         var all = $('#item_field').html();

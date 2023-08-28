@@ -10,6 +10,7 @@ from django.utils import timezone
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment
 from openpyxl.styles.borders import Border, Side
+from django.http import JsonResponse
 
 import mimetypes
 from mysite2.settings import BASE_DIR
@@ -105,12 +106,31 @@ class AdminFrom(ListView):
 
     def post(self, request):
         print("list:")
-        for chk_pk in request.POST.getlist('chk'):
-            account = get_object_or_404(Account,pk=chk_pk)
-            account.delete()
-            User.objects.get(username=account.user.username).delete()
-            system.DeleteSheet(account.user.username)
-            print(account.user)
+        now = timezone.localtime(timezone.now())
+        now_12b = system.TodayBehind12(now)
+        working_time = now-now
+        if "all_leave" in request.POST:
+            for account in Account.objects.all():
+                account.is_working = False
+                if now > account.start_time:
+                    account.end_time = system.LeavingTimeCalc(now)
+                    account.end_overtime = system.ConvertDatetimeToOvertime(account.end_time)
+                    working_time = account.end_time - account.start_time
+                else:
+                    account.end_time = account.start_time
+                    account.end_overtime = account.start_overtime
+            
+                account.save()
+                system.UpadateAttendanceSheet(account.pk,now_12b)
+                system.UpdateDaily(now_12b)
+    
+        else:
+            for chk_pk in request.POST.getlist('chk'):
+                account = get_object_or_404(Account,pk=chk_pk)
+                account.delete()
+                User.objects.get(username=account.user.username).delete()
+                system.DeleteSheet(account.user.username)
+                print(account.user)
         return super().get(request)
 
 class Registration(TemplateView):
@@ -352,6 +372,20 @@ class SelectSeat(ListView):
 
         return super().get(request)
 
+def ajax_month_change(request):
+    selectd_month = int(request.POST.get('disp_month'))
+    selected_sheets = CheckSheet.objects.filter(start_time__month=selectd_month)
+    
+    sheets_array = []
+    for sheet in selected_sheets:
+        sheets_array.append([sheet.pk, sheet.client_name ,sheet.total_fee ,sheet.start_overtime ,sheet.end_overtime])
+        print(sheets_array)
+    d = {
+        'month' : selectd_month,
+        'sheets': sheets_array,
+    }
+    return JsonResponse(d)
+
 class CheckEditer(TemplateView):
 
     def get(self, request, pk):
@@ -381,8 +415,12 @@ class CheckEditer(TemplateView):
             check_sheet_obj = get_object_or_404(CheckSheet, pk=pk)
         except:
             return HttpResponseRedirect(reverse("SelectSeat"))
+
+        if "undo" in request.POST:
+            print("undo")
+            return HttpResponseRedirect(reverse("SelectSeat"))
             
-        if "cancel" in request.POST:
+        if "cancel" in request.POST or "delete" in request.POST:
             print("cancel")
             god = get_object_or_404(CheckSheet, client_name="clientGOD")
             for seat in check_sheet_obj.seat_set.all():
@@ -392,7 +430,8 @@ class CheckEditer(TemplateView):
             print(check_sheet_obj)
             check_sheet_obj.delete()
             return HttpResponseRedirect(reverse("SelectSeat"))
-        
+
+
         check_sheet_obj.total_fee = int(request.POST.get('total-f'))
         check_sheet_obj.discount = int(request.POST.get('discount'))
         check_sheet_obj.start_overtime = request.POST.get('start_time')
