@@ -146,11 +146,11 @@ checksheet
                             </tr>
                             </thead>
                             <tbody id="staff_tbody">
-                            {% for selectedStaff in Relations %}                              
-                                <tr class="selected_staff_tr">
+                            {% if Relations.first is None %}                          
+                                <tr class="selected_staff_tr" style="display:none;">
                                     <td id="name">
                                         <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                            {{selectedStaff.account}}   
+                                            {{Staff.first}}   
                                             </button>
                                         <ul class="dropdown-menu" name="staff" aria-labelledby="dropdownMenuButton">
                                         {% for account in Staff %}
@@ -158,12 +158,12 @@ checksheet
                                                 <li><a class="dropdown-item">{{account}}</a></li>
                                             {% endif %}
                                         {% endfor %}
-                                        <input type="hidden" class="form-control" name="selected_staff" value="{{selectedStaff.account.user.username}}">
+                                        <input type="hidden" class="form-control" name="selected_staff" value="">
                                         </ul>
                                     </td>
                                     <td id="attr">
                                         <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
-                                            {{selectedStaff.attr}}
+                                            B
                                         </button>
                                         <ul class="dropdown-menu" id="staff_attr" aria-labelledby="dropdownMenuButton2">
                                             <li><a class="dropdown-item">B</a></li>
@@ -171,11 +171,42 @@ checksheet
                                             <li><a class="dropdown-item">BJ</a></li>
                                             <li><a class="dropdown-item">M</a></li>
                                             <li><a class="dropdown-item">DM</a></li>
-                                            <input type="hidden" class="form-control" name="staff_attr" value="{{selectedStaff.attr}}">
+                                            <input type="hidden" class="form-control" name="staff_attr" value="">
                                         </ul>
                                     </td>
                                 </tr>
-                            {% endfor %}
+                            {% else %}
+                                {% for selectedStaff in Relations %}                            
+                                    <tr class="selected_staff_tr">
+                                        <td id="name">
+                                            <button class="btn btn-outline-info dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                                {{selectedStaff.account}}   
+                                                </button>
+                                            <ul class="dropdown-menu" name="staff" aria-labelledby="dropdownMenuButton">
+                                            {% for account in Staff %}
+                                                {% if not account.user.username == "admin" %}
+                                                    <li><a class="dropdown-item">{{account}}</a></li>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <input type="hidden" class="form-control" name="selected_staff" value="{{selectedStaff.account.user.username}}">
+                                            </ul>
+                                        </td>
+                                        <td id="attr">
+                                            <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
+                                                {{selectedStaff.attr}}
+                                            </button>
+                                            <ul class="dropdown-menu" id="staff_attr" aria-labelledby="dropdownMenuButton2">
+                                                <li><a class="dropdown-item">B</a></li>
+                                                <li><a class="dropdown-item">J</a></li>
+                                                <li><a class="dropdown-item">BJ</a></li>
+                                                <li><a class="dropdown-item">M</a></li>
+                                                <li><a class="dropdown-item">DM</a></li>
+                                                <input type="hidden" class="form-control" name="staff_attr" value="{{selectedStaff.attr}}">
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% endif %}
                             </tbody>
                         </table>
                     </div>
@@ -345,9 +376,10 @@ $(function(){
 
     $('button[name="staffAdd"]').on("click", function(){        
         index = $('.selected_staff_tr').length-1;
-        if($('.selected_staff_tr').hasClass('d-none')){
+        //alert(index);
+        if($('.selected_staff_tr').css('display') == 'none'){
             //alert(all);
-            $('.selected_staff_tr').removeClass('d-none');
+            $('.selected_staff_tr').show();
             $('#name').find('li').eq(0).trigger('click');
             $('#attr').find('li').eq(0).trigger('click');
         }else{
@@ -360,7 +392,7 @@ $(function(){
         index = $('.selected_staff_tr').length-1;
         //alert(index);
         if(index == 0){
-            $('.selected_staff_tr').addClass('d-none');
+            $('.selected_staff_tr').hide();
             $('.selected_staff_tr').find('input').val("");
         }
         else{
