@@ -16,13 +16,15 @@ checksheet
     
     <div class="btn-toolbar justify-content-between">
         <div>
-            <input type="submit" class="btn btn-secondary" name="undo" value="戻る">
+            {% if not CheckSheet.asign and CheckSheet.end_overtime == "" %}
+                <input type="submit" class="btn btn-secondary" name="cancel" value="アサインをキャンセル">
+            {% else %}
+                <input type="submit" class="btn btn-secondary" name="undo" value="戻る">
+            {% endif %}
             
         </div>
         <div>
-            {% if not CheckSheet.asign and CheckSheet.end_overtime == "" %}
-                <input type="submit" class="btn btn-danger" name="cancel" value="アサインをキャンセル">
-            {% else %}
+            {% if CheckSheet.asign or CheckSheet.end_overtime != "" %}
                 <input type="submit" class="btn btn-danger" name="delete" value="削除">
             {% endif %}
         </div>
